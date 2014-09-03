@@ -29,17 +29,23 @@ int userID; int[] userMap;
 PImage resultImage;
 PImage tmpImage;
 Movie myMovie;
+
+int KINECT_WIDTH = 640;
+int KINECT_HEIGHT = 480;
 int WIDTH = 1280;
 int HEIGHT = 720;
 
 int maxLenght = WIDTH * HEIGHT;
 String videofile = "test.mov";
 
+IntVector userList;
+
 void setup() {
   size(WIDTH*2, HEIGHT);
   String dataDir = dataPath("");
   myMovie = new Movie(this, dataDir + "/" + videofile);
   myMovie.loop();
+  myMovie.volume(0);
   
   kinect = new SimpleOpenNI(this);
   if(kinect.isInit() == false)
@@ -50,7 +56,7 @@ void setup() {
   }
   
   // enable depthMap generation 
- kinect.enableDepth();
+  kinect.enableDepth();
    
   // enable skeleton generation for all joints
   kinect.enableUser();
@@ -61,6 +67,8 @@ void setup() {
 
   // turn on depth/color alignment
   kinect.alternativeViewPointDepthToImage();
+
+  userList = new IntVector();
 }
 
 void overlayVideo() {
@@ -72,18 +80,44 @@ void overlayVideo() {
   resultImage.updatePixels();
 }
 
+void convertPosTo720p(PVector position) {
+  position.x = position.x * WIDTH / KINECT_WIDTH;
+  position.y = position.y * HEIGHT/ KINECT_HEIGHT;
+}
+
+void showCenterOfMass()
+{
+  kinect.getUsers(userList);
+  long nbUsers = userList.size();
+
+  for(int i=0; i<nbUsers; i++) {
+    int userId = userList.get(i);
+    PVector position = new PVector();
+    kinect.getCoM(userId, position); // CoM <= Center Of Mass
+    kinect.convertRealWorldToProjective(position, position);
+    
+    if(!Float.isNaN(position.x)) {
+      println("before user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y);
+      convertPosTo720p(position);  
+      println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y);
+      fill(255, 0, 0);
+      ellipse(position.x, position.y, 25, 25);
+    }
+  }
+}
+
 void draw() {
   kinect.update();
   // get the Kinect color image
   PImage rgbImage = kinect.rgbImage();
-  image(rgbImage, 640, 0);
+  image(rgbImage, KINECT_WIDTH, 0);
   if (tracking) {
     //ask kinect for bitmap of user pixels
     loadPixels();
     userMap = kinect.userMap();
    
     //create a buffer image to work with instead of using sketch pixels
-    resultImage = new PImage(640, 480, RGB); 
+    resultImage = new PImage(KINECT_WIDTH, KINECT_HEIGHT, RGB); 
     
     for (int i =0; i < userMap.length; i++) {
       // if the pixel is part of the user
@@ -98,10 +132,12 @@ void draw() {
     }
     
     //update the pixel from the inner array to image
-     resultImage.updatePixels();
-     resultImage.resize(WIDTH, HEIGHT);  
+    resultImage.updatePixels();
+    resultImage.resize(WIDTH, HEIGHT);  
     overlayVideo();
     image(resultImage, 0, 0);
+    showCenterOfMass();
+    
   }
 }
 
