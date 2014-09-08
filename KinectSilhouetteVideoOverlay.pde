@@ -36,7 +36,9 @@ int WIDTH = 1280;
 int HEIGHT = 720;
 
 int maxLenght = WIDTH * HEIGHT;
-String videofile = "test.mov";
+//String videofile = "clips/test.mov";
+String videofile = "clips/sept 2 national.mov";
+
 
 IntVector userList;
 
@@ -136,7 +138,7 @@ void draw() {
     resultImage.resize(WIDTH, HEIGHT);  
     overlayVideo();
     image(resultImage, 0, 0);
-    showCenterOfMass();
+    //showCenterOfMass();
     
   }
 }
