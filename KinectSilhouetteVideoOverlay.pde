@@ -27,7 +27,6 @@ int userID; int[] userMap;
 
 // declare our images 
 PImage resultImage;
-PImage tmpImage;
 Movie myMovie;
 
 int KINECT_WIDTH = 640;
@@ -101,7 +100,7 @@ void showCenterOfMass()
     if(!Float.isNaN(position.x)) {
       println("before user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y);
       convertPosTo720p(position);  
-      println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y);
+      println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
       fill(255, 0, 0);
       ellipse(position.x, position.y, 25, 25);
     }
@@ -110,9 +109,6 @@ void showCenterOfMass()
 
 void draw() {
   kinect.update();
-  // get the Kinect color image
-  PImage rgbImage = kinect.rgbImage();
-  image(rgbImage, KINECT_WIDTH, 0);
   if (tracking) {
     //ask kinect for bitmap of user pixels
     loadPixels();
@@ -126,20 +122,23 @@ void draw() {
       if (userMap[i] != 0) {
         // set the pixel to the color pixel
         resultImage.pixels[i] = color(0,0,255);
-      }
-      else {
+      } else {
         //set it to the background
         resultImage.pixels[i] = color(0,0,0); //backgroundImage.pixels[i];
       }
-    }
+    } 
     
     //update the pixel from the inner array to image
     resultImage.updatePixels();
     resultImage.resize(WIDTH, HEIGHT);  
     overlayVideo();
     image(resultImage, 0, 0);
-    //showCenterOfMass();
+    showCenterOfMass();
     
+  } else {
+    // get the Kinect color image
+    PImage rgbImage = kinect.rgbImage();
+    image(rgbImage, 0, 0);
   }
 }
 
