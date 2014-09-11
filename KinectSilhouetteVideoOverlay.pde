@@ -2,6 +2,9 @@ import processing.video.*;
 import processing.opengl.*; 
 import SimpleOpenNI.*;
 
+import oscP5.*;
+import netP5.*;
+
 /*
  * Description:
  *   use the kinect to obtain a silhoutte and overlay video on top
@@ -38,11 +41,25 @@ int maxLenght = WIDTH * HEIGHT;
 //String videofile = "clips/test.mov";
 String videofile = "clips/sept 2 national.mov";
 
+OscP5 oscP5;
+NetAddress myRemoteLocation;
 
 IntVector userList;
 
+String oscAdress = "127.0.0.1";
+int oscServerPort = 12000;
+int oscClientPort = 7000;
+
+void oscSend(PVector position) {
+  OscMessage msg = new OscMessage("/pos");
+  msg.add(position.x);
+  msg.add(position.y);
+  msg.add(position.z);
+  oscP5.send(msg, myRemoteLocation); 
+}
+
 void setup() {
-  size(WIDTH*2, HEIGHT);
+  size(WIDTH, HEIGHT);
   String dataDir = dataPath("");
   myMovie = new Movie(this, dataDir + "/" + videofile);
   myMovie.loop();
@@ -55,6 +72,11 @@ void setup() {
      exit();
      return;  
   }
+  
+  //start oscP5, listening for incoming messages at port 7000
+  oscP5 = new OscP5(this, oscServerPort, OscP5.UDP);
+  myRemoteLocation = new NetAddress(oscAdress, oscClientPort);
+
   
   // enable depthMap generation 
   kinect.enableDepth();
@@ -98,11 +120,11 @@ void showCenterOfMass()
     kinect.convertRealWorldToProjective(position, position);
     
     if(!Float.isNaN(position.x)) {
-      println("before user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y);
       convertPosTo720p(position);  
-      println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
+      //println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
       fill(255, 0, 0);
       ellipse(position.x, position.y, 25, 25);
+      oscSend(position);
     }
   }
 }
@@ -163,4 +185,12 @@ void onLostUser(SimpleOpenNI curContext, int userId)
 void onVisibleUser(SimpleOpenNI curContext, int userId)
 {
   //println("onVisibleUser - userId: " + userId);
+}
+
+/* incoming osc message are forwarded to the oscEvent method. */
+void oscEvent(OscMessage theOscMessage) {
+  /* print the address pattern and the typetag of the received OscMessage */
+  print("### received an osc message.");
+  print(" addrpattern: "+theOscMessage.addrPattern());
+  println(" typetag: "+theOscMessage.typetag());
 }
