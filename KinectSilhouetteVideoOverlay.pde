@@ -47,8 +47,8 @@ NetAddress myRemoteLocation;
 IntVector userList;
 
 String oscAdress = "127.0.0.1";
-int oscServerPort = 12000;
-int oscClientPort = 7000;
+int oscServerPort = 13000;
+int oscClientPort = 12000;
 
 void oscSend(PVector position) {
   OscMessage msg = new OscMessage("/pos");
