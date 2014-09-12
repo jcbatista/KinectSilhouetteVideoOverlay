@@ -38,8 +38,10 @@ int WIDTH = 1280;
 int HEIGHT = 720;
 
 int maxLenght = WIDTH * HEIGHT;
-//String videofile = "clips/test.mov";
-String videofile = "clips/sept 2 national.mov";
+//String videofile = "test.mov";
+String videofile = "sept 2 national.mov";
+String actionClipFilename = "PreRecordedVideoTEST_PREMIERE.mov"; // prerecorded clip that displayed randomly during the projection
+Movie actionClip;
 
 OscP5 oscP5;
 NetAddress myRemoteLocation;
@@ -58,12 +60,19 @@ void oscSend(PVector position) {
   oscP5.send(msg, myRemoteLocation); 
 }
 
+Movie LoadMovie(String filename) {
+  return new Movie(this, dataPath("") + "/clips/" + filename);
+}
+
 void setup() {
   size(WIDTH, HEIGHT);
-  String dataDir = dataPath("");
-  myMovie = new Movie(this, dataDir + "/" + videofile);
+  
+  myMovie = LoadMovie(videofile);
   myMovie.loop();
   myMovie.volume(0);
+  
+  actionClip = LoadMovie(actionClipFilename);
+  actionClip.loop();
   
   kinect = new SimpleOpenNI(this);
   if(kinect.isInit() == false)
@@ -94,11 +103,29 @@ void setup() {
   userList = new IntVector();
 }
 
-void overlayVideo() {
-  for (int i =0; i < resultImage.pixels.length; i++) {
-     if (resultImage.pixels[i] != 0) {
-       resultImage.pixels[i] = i < maxLenght ? myMovie.pixels[i] : color(0,0,255);
+void addActionClip(Movie clip) {
+  for (int i =0; i < clip.pixels.length; i++) {
+     if (clip.pixels[i] != 0) {
+       resultImage.pixels[i] = color(0,0,255);
      }
+  }
+  resultImage.updatePixels();
+}
+
+void addImage(PImage image) {
+    for (int i=0; i < image.pixels.length; i++) {
+     if (image.pixels[i] != 0) {
+       resultImage.pixels[i] = image.pixels[i];
+     }
+  }
+  resultImage.updatePixels();
+}
+
+void overlayVideo() {
+  for (int i=0; i < resultImage.pixels.length; i++) {
+    if (resultImage.pixels[i] != 0) {
+      resultImage.pixels[i] = i < maxLenght ? myMovie.pixels[i] : color(0,0,255);  // TODO: we don't need maxlenght anymore
+    }
   }
   resultImage.updatePixels();
 }
@@ -129,6 +156,27 @@ void showCenterOfMass()
   }
 }
 
+PImage getKinectSilhouette() {
+   //create a buffer image to work with instead of using sketch pixels
+    PImage image = new PImage(KINECT_WIDTH, KINECT_HEIGHT, RGB); 
+    
+    for (int i =0; i < userMap.length; i++) {
+      // if the pixel is part of the user
+      if (userMap[i] != 0) {
+        // set the pixel to the color pixel
+        image.pixels[i] = color(0,0,255);
+      } else {
+        //set it to the background
+        image.pixels[i] = color(0,0,0); //backgroundImage.pixels[i];
+      }
+    } 
+    
+    //update the pixel from the inner array to image
+    image.updatePixels();
+    image.resize(WIDTH, HEIGHT);  
+    return image;
+}
+
 void draw() {
   kinect.update();
   if (tracking) {
@@ -137,23 +185,14 @@ void draw() {
     userMap = kinect.userMap();
    
     //create a buffer image to work with instead of using sketch pixels
-    resultImage = new PImage(KINECT_WIDTH, KINECT_HEIGHT, RGB); 
-    
-    for (int i =0; i < userMap.length; i++) {
-      // if the pixel is part of the user
-      if (userMap[i] != 0) {
-        // set the pixel to the color pixel
-        resultImage.pixels[i] = color(0,0,255);
-      } else {
-        //set it to the background
-        resultImage.pixels[i] = color(0,0,0); //backgroundImage.pixels[i];
-      }
-    } 
-    
-    //update the pixel from the inner array to image
-    resultImage.updatePixels();
-    resultImage.resize(WIDTH, HEIGHT);  
-    overlayVideo();
+    resultImage = new PImage(WIDTH, HEIGHT, RGB); 
+        
+    //addActionClip(actionClip);    
+        
+    PImage silhouette = getKinectSilhouette();
+    addImage(silhouette);
+   
+    //overlayVideo();
     image(resultImage, 0, 0);
     showCenterOfMass();
     
