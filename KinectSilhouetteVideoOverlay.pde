@@ -39,8 +39,7 @@ int HEIGHT = 720;
 
 //String videofile = "test.mov";
 String videofile = "sept 2 national.mov";
-//String actionClipFilename = "PreRecordedVideoTEST_PREMIERE.mov"; // prerecorded clip that displayed randomly during the projection
-String actionClipFilename = "KinectPrerecorded.mov";
+String actionClipFilename = "PreRecordedVideoTEST_PREMIERE.mov"; // prerecorded clip that displayed randomly during the projection
 Movie actionClip;
 
 OscP5 oscP5;
@@ -86,7 +85,6 @@ void setup() {
   oscP5 = new OscP5(this, oscServerPort, OscP5.UDP);
   myRemoteLocation = new NetAddress(oscAdress, oscClientPort);
 
-  
   // enable depthMap generation 
   kinect.enableDepth();
    
@@ -150,28 +148,15 @@ PImage getKinectSilhouette() {
     return image;
 }
 
-int count = 0;
-int previous = 0;
-HashMap<Integer,Integer> map = new HashMap<Integer,Integer>();
-
 void addActionClip(Movie clip) {
-  int minRange = 170;
-  int maxRange = 180;
   for (int i =0; i < clip.pixels.length; i++) {
      int maskedColor = clip.pixels[i] & 0xffffff;
      if (maskedColor != 0) {
-       float colorHue = hue(clip.pixels[i]);
        float saturation = saturation(clip.pixels[i]);
        float brightness = brightness(clip.pixels[i]); 
-       if(/*colorHue > minRange && colorHue <= maxRange &&*/ saturation>30 && brightness>100) { 
-         resultImage.pixels[i] = color(0,0,255);//maskedColor;//color(0,0,255);
+       if(saturation>30 && brightness>100) { 
+         resultImage.pixels[i] = color(0,0,255);//maskedColor;
        }
-       if(count < 4000 && clip.pixels[i]!=previous && !map.containsKey(clip.pixels[i])) {
-         println(hex(clip.pixels[i]) + " hue=" + colorHue + " saturation=" + saturation + " brightness=" + brightness);
-         previous = clip.pixels[i];
-         map.put(clip.pixels[i], clip.pixels[i]);
-         count++;
-       } 
      }
   }
   resultImage.updatePixels();
