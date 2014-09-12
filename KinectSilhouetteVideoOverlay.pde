@@ -37,7 +37,6 @@ int KINECT_HEIGHT = 480;
 int WIDTH = 1280;
 int HEIGHT = 720;
 
-int maxLenght = WIDTH * HEIGHT;
 //String videofile = "test.mov";
 String videofile = "sept 2 national.mov";
 String actionClipFilename = "PreRecordedVideoTEST_PREMIERE.mov"; // prerecorded clip that displayed randomly during the projection
@@ -124,7 +123,7 @@ void addImage(PImage image) {
 void overlayVideo() {
   for (int i=0; i < resultImage.pixels.length; i++) {
     if (resultImage.pixels[i] != 0) {
-      resultImage.pixels[i] = i < maxLenght ? myMovie.pixels[i] : color(0,0,255);  // TODO: we don't need maxlenght anymore
+      resultImage.pixels[i] = myMovie.pixels[i];
     }
   }
   resultImage.updatePixels();
@@ -229,7 +228,9 @@ void onVisibleUser(SimpleOpenNI curContext, int userId)
 /* incoming osc message are forwarded to the oscEvent method. */
 void oscEvent(OscMessage theOscMessage) {
   /* print the address pattern and the typetag of the received OscMessage */
+  /*
   print("### received an osc message.");
   print(" addrpattern: "+theOscMessage.addrPattern());
   println(" typetag: "+theOscMessage.typetag());
+  */
 }
