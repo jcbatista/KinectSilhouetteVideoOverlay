@@ -39,7 +39,8 @@ int HEIGHT = 720;
 
 //String videofile = "test.mov";
 String videofile = "sept 2 national.mov";
-String actionClipFilename = "PreRecordedVideoTEST_PREMIERE.mov"; // prerecorded clip that displayed randomly during the projection
+//String actionClipFilename = "PreRecordedVideoTEST_PREMIERE.mov"; // prerecorded clip that displayed randomly during the projection
+String actionClipFilename = "KinectPrerecorded.mov";
 Movie actionClip;
 
 OscP5 oscP5;
@@ -102,33 +103,6 @@ void setup() {
   userList = new IntVector();
 }
 
-void addActionClip(Movie clip) {
-  for (int i =0; i < clip.pixels.length; i++) {
-     if (clip.pixels[i] != 0) {
-       resultImage.pixels[i] = color(0,0,255);
-     }
-  }
-  resultImage.updatePixels();
-}
-
-void addImage(PImage image) {
-    for (int i=0; i < image.pixels.length; i++) {
-     if (image.pixels[i] != 0) {
-       resultImage.pixels[i] = image.pixels[i];
-     }
-  }
-  resultImage.updatePixels();
-}
-
-void overlayVideo() {
-  for (int i=0; i < resultImage.pixels.length; i++) {
-    if (resultImage.pixels[i] != 0) {
-      resultImage.pixels[i] = myMovie.pixels[i];
-    }
-  }
-  resultImage.updatePixels();
-}
-
 void convertPosTo720p(PVector position) {
   position.x = position.x * WIDTH / KINECT_WIDTH;
   position.y = position.y * HEIGHT/ KINECT_HEIGHT;
@@ -176,6 +150,51 @@ PImage getKinectSilhouette() {
     return image;
 }
 
+int count = 0;
+int previous = 0;
+HashMap<Integer,Integer> map = new HashMap<Integer,Integer>();
+
+void addActionClip(Movie clip) {
+  int minRange = 170;
+  int maxRange = 180;
+  for (int i =0; i < clip.pixels.length; i++) {
+     int maskedColor = clip.pixels[i] & 0xffffff;
+     if (maskedColor != 0) {
+       float colorHue = hue(clip.pixels[i]);
+       float saturation = saturation(clip.pixels[i]);
+       float brightness = brightness(clip.pixels[i]); 
+       if(/*colorHue > minRange && colorHue <= maxRange &&*/ saturation>30 && brightness>100) { 
+         resultImage.pixels[i] = color(0,0,255);//maskedColor;//color(0,0,255);
+       }
+       if(count < 4000 && clip.pixels[i]!=previous && !map.containsKey(clip.pixels[i])) {
+         println(hex(clip.pixels[i]) + " hue=" + colorHue + " saturation=" + saturation + " brightness=" + brightness);
+         previous = clip.pixels[i];
+         map.put(clip.pixels[i], clip.pixels[i]);
+         count++;
+       } 
+     }
+  }
+  resultImage.updatePixels();
+}
+
+void overlayVideo() {
+  for (int i=0; i < resultImage.pixels.length; i++) {
+    if (resultImage.pixels[i] != 0) {
+      resultImage.pixels[i] = myMovie.pixels[i];
+    }
+  }
+  resultImage.updatePixels();
+}
+
+void addImage(PImage image) {
+    for (int i=0; i < image.pixels.length; i++) {
+     if (image.pixels[i] != 0) {
+       resultImage.pixels[i] = image.pixels[i];       
+     }
+  }
+  resultImage.updatePixels();
+}
+
 void draw() {
   kinect.update();
   if (tracking) {
@@ -186,12 +205,12 @@ void draw() {
     //create a buffer image to work with instead of using sketch pixels
     resultImage = new PImage(WIDTH, HEIGHT, RGB); 
         
-    //addActionClip(actionClip);    
+    addActionClip(actionClip);    
         
     PImage silhouette = getKinectSilhouette();
     addImage(silhouette);
    
-    //overlayVideo();
+    overlayVideo();
     image(resultImage, 0, 0);
     showCenterOfMass();
     
