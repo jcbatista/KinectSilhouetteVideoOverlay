@@ -24,13 +24,12 @@ import netP5.*;
  */
 
 SimpleOpenNI kinect;
-
+ClipManager clipMgr; 
 boolean tracking = false; 
 int userID; int[] userMap; 
 
 // declare our images 
 PImage resultImage;
-Movie myMovie;
 
 int KINECT_WIDTH = 640;
 int KINECT_HEIGHT = 480;
@@ -65,17 +64,15 @@ Movie LoadMovie(String filename) {
 
 void setup() {
   size(WIDTH, HEIGHT);
-  
-  myMovie = LoadMovie(videofile);
-  myMovie.loop();
-  myMovie.volume(0);
+  clipMgr = new ClipManager(this);
+  clipMgr.add(videofile);
+  clipMgr.start();
   
   actionClip = LoadMovie(actionClipFilename);
   actionClip.loop();
   
   kinect = new SimpleOpenNI(this);
-  if(kinect.isInit() == false)
-  {
+  if(kinect.isInit() == false) {  
      println("Can't init SimpleOpenNI, maybe the camera is not connected!"); 
      exit();
      return;  
@@ -165,7 +162,7 @@ void addActionClip(Movie clip) {
 void overlayVideo() {
   for (int i=0; i < resultImage.pixels.length; i++) {
     if (resultImage.pixels[i] != 0) {
-      resultImage.pixels[i] = myMovie.pixels[i];
+      resultImage.pixels[i] = clipMgr.getCurrent().movie.pixels[i];
     }
   }
   resultImage.updatePixels();
