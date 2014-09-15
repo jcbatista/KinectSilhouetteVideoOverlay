@@ -15,31 +15,46 @@ class ClipManager
   
   void add(String filename)
   {
+    this.add(filename, -1);
+  }
+  
+  void add(String filename, int duration)
+  {
     Movie movie = LoadMovie(filename);
-    movie.volume(0);
     Clip clip = new Clip(movie);
+    clip.setDuration(duration);
     clips.add(clip);
   }
   
   void start() {
     currentClip = clips.getFirst();
-    
-    if(currentClip!=null) {
-      currentClip.movie.loop();
+    if(currentClip != null) {
+      currentClip.start();
       currentClipIndex = 0;
+      started = true;
     } else {
       println("clip sequence couldn't be started...");
     }
   }
   
   Clip getCurrent() { 
-    return currentClip;
+    if(!currentClip.hasCompleted()) {
+      return currentClip;
+    } else {
+      //currentClip.stop();
+      // get the next one
+      // TODO
+      return null;
+    } 
   }
   
   void next() {
     // todo
   }
   
+  boolean isStarted() { return started; }
+  
+  private boolean started = false;
   private String dataPath;
   private LinkedList<Clip> clips;
   private int currentClipIndex = -1;

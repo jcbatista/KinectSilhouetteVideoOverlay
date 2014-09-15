@@ -26,7 +26,8 @@ import netP5.*;
 SimpleOpenNI kinect;
 ClipManager clipMgr; 
 boolean tracking = false; 
-int userID; int[] userMap; 
+int userID; 
+int[] userMap;
 
 // declare our images 
 PImage resultImage;
@@ -36,8 +37,8 @@ int KINECT_HEIGHT = 480;
 int WIDTH = 1280;
 int HEIGHT = 720;
 
-//String videofile = "test.mov";
-String videofile = "sept 2 national.mov";
+String videofile = "test.mov";
+//String videofile = "sept 2 national.mov";
 String actionClipFilename = "PreRecordedVideoTEST_PREMIERE.mov"; // prerecorded clip that displayed randomly during the projection
 Movie actionClip;
 
@@ -51,6 +52,8 @@ int oscServerPort = 13000;
 int oscClientPort = 12000;
 
 void oscSend(PVector position) {
+  // TODO need to add another field to identify the user ...
+  // and one to identify which Kinect we're using
   OscMessage msg = new OscMessage("/pos");
   msg.add(position.x);
   msg.add(position.y);
@@ -66,7 +69,6 @@ void setup() {
   size(WIDTH, HEIGHT);
   clipMgr = new ClipManager(this);
   clipMgr.add(videofile);
-  clipMgr.start();
   
   actionClip = LoadMovie(actionClipFilename);
   actionClip.loop();
@@ -103,7 +105,7 @@ void convertPosTo720p(PVector position) {
   position.y = position.y * HEIGHT/ KINECT_HEIGHT;
 }
 
-void showCenterOfMass()
+void processCenterOfMass(boolean show)
 {
   kinect.getUsers(userList);
   long nbUsers = userList.size();
@@ -117,8 +119,10 @@ void showCenterOfMass()
     if(!Float.isNaN(position.x)) {
       convertPosTo720p(position);  
       //println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
-      fill(255, 0, 0);
-      ellipse(position.x, position.y, 25, 25);
+      if(show) {
+        fill(255, 0, 0);
+        ellipse(position.x, position.y, 25, 25);
+      }
       oscSend(position);
     }
   }
@@ -146,7 +150,7 @@ PImage getKinectSilhouette() {
 }
 
 void addActionClip(Movie clip) {
-  for (int i =0; i < clip.pixels.length; i++) {
+  for (int i=0; i < clip.pixels.length; i++) {
      int maskedColor = clip.pixels[i] & 0xffffff;
      if (maskedColor != 0) {
        float saturation = saturation(clip.pixels[i]);
@@ -159,12 +163,28 @@ void addActionClip(Movie clip) {
   resultImage.updatePixels();
 }
 
+Clip previousClip = null; // TODO remove
+
 void overlayVideo() {
+  Clip clip = clipMgr.getCurrent();
+  
+  if(clip!=previousClip) {
+
+    previousClip = clip;
+    if(clip==null) println("clip has ended!!!");
+    
+  }
+  
+  if(clip==null) {
+    return; // no clip to overlay
+  }
+  
   for (int i=0; i < resultImage.pixels.length; i++) {
     if (resultImage.pixels[i] != 0) {
-      resultImage.pixels[i] = clipMgr.getCurrent().movie.pixels[i];
+      resultImage.pixels[i] = clip.movie.pixels[i];
     }
   }
+  
   resultImage.updatePixels();
 }
 
@@ -180,6 +200,10 @@ void addImage(PImage image) {
 void draw() {
   kinect.update();
   if (tracking) {
+    if(!clipMgr.isStarted()) {
+      clipMgr.start();
+    }
+    
     //ask kinect for bitmap of user pixels
     loadPixels();
     userMap = kinect.userMap();
@@ -191,10 +215,11 @@ void draw() {
         
     PImage silhouette = getKinectSilhouette();
     addImage(silhouette);
-   
+    
     overlayVideo();
     image(resultImage, 0, 0);
-    showCenterOfMass();
+    // filter(BLUR,1);
+    processCenterOfMass(false);
     
   } else {
     // get the Kinect color image
