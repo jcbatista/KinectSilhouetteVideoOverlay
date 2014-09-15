@@ -13,7 +13,7 @@ class Clip {
   }
   
   int getEllapsedTime() {
-    // TODO doesn't work
+    // TODO: doesn't work
     long elapseTime = System.nanoTime() - startTime;
     double seconds = (double)elapseTime / 1000000000d; 
     return (int)seconds;
@@ -25,7 +25,7 @@ class Clip {
 
    if(duration==-1)
      return false;
-   
+   /*
    // TODO REMOVE
    if(count<100)
    {
@@ -34,7 +34,7 @@ class Clip {
      System.out.format("duration: %d \n", duration);
      count++;
    }
-   
+   */
    return getEllapsedTime() > duration;
  }
  

@@ -33,30 +33,32 @@ class ClipManager
     clips.add(clip);
   }
   
-  void start() {
-    currentClip = clips.getFirst();
-    if(currentClip != null) {
-      currentClip.start();
+  private void start() {
+    if(currentClipIndex==-1 && clips.size() > 0) {
       currentClipIndex = 0;
+    }
+    currentClip = clips.get(currentClipIndex);
+    if(currentClip != null) {
+      
+      println("*********** Now playing clip index:" + currentClipIndex + " of " + clips.size());
+      currentClip.start();
       started = true;
     } else {
-      println("clip sequence couldn't be started ...");
+      println("clip couldn't be started ...");
     }
   }
   
-  Clip getCurrent() { 
-    if(!currentClip.hasCompleted()) {
-      return currentClip;
-    } else {
-      //currentClip.stop();
-      // get the next one
-      // TODO
-      return null;
+  Clip getCurrent() {
+    if(currentClip.hasCompleted()) {
+      int size = clips.size();
+      if(size > 0) {
+        currentClip.stop(); // make sure the current clip is actually stopped
+        // cycle to the next clip
+        currentClipIndex = (currentClipIndex+1) % size;
+        start();
+      }
     } 
-  }
-  
-  void next() {
-    // todo
+    return currentClip;
   }
   
   boolean isStarted() { return started; }
