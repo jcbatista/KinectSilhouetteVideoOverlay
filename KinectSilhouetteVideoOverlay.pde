@@ -25,8 +25,10 @@ import netP5.*;
 
 SimpleOpenNI kinect;
 ClipManager clipMgr; 
+ConfigManager configMgr;
+
 boolean tracking = false; 
-int userID; 
+int userID;
 int[] userMap;
 
 // declare our images 
@@ -37,9 +39,6 @@ int KINECT_HEIGHT = 480;
 int WIDTH = 1280;
 int HEIGHT = 720;
 
-String videofile = "test.mov";
-//String videofile = "sept 2 national.mov";
-String actionClipFilename = "PreRecordedVideoTEST_PREMIERE.mov"; // prerecorded clip that displayed randomly during the projection
 Movie actionClip;
 
 OscP5 oscP5;
@@ -67,10 +66,13 @@ Movie LoadMovie(String filename) {
 
 void setup() {
   size(WIDTH, HEIGHT);
-  clipMgr = new ClipManager(this);
-  clipMgr.add(videofile);
+  configMgr = new ConfigManager();
+  configMgr.listClips();
   
-  actionClip = LoadMovie(actionClipFilename);
+  clipMgr = new ClipManager(this);
+  clipMgr.add(configMgr.getClips());
+  
+  actionClip = LoadMovie(configMgr.getActionClips().get(0)); // grab the fist action clip: TODO add support for multiple clips
   actionClip.loop();
   
   kinect = new SimpleOpenNI(this);

@@ -18,6 +18,13 @@ class ClipManager
     this.add(filename, -1);
   }
   
+  void add(StringList list)
+  {
+    for (String filename : list) {
+      this.add(filename, -1);
+    }
+  }
+  
   void add(String filename, int duration)
   {
     Movie movie = LoadMovie(filename);
@@ -33,7 +40,7 @@ class ClipManager
       currentClipIndex = 0;
       started = true;
     } else {
-      println("clip sequence couldn't be started...");
+      println("clip sequence couldn't be started ...");
     }
   }
   
