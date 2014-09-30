@@ -1,3 +1,6 @@
+//import gab.opencv.*;
+import processing.video.*;
+//import java.awt.*;
 import processing.video.*;
 import processing.opengl.*; 
 import SimpleOpenNI.*;
@@ -46,6 +49,8 @@ OscP5 oscP5;
 NetAddress myRemoteLocation;
 
 IntVector userList;
+
+//OpenCV openCV;
 
 String oscAdress = "127.0.0.1";
 int oscServerPort = 13000;
@@ -101,6 +106,7 @@ void setup() {
   kinect.alternativeViewPointDepthToImage();
 
   userList = new IntVector();
+  //openCV = new OpenCV(this, KINECT_WIDTH, KINECT_HEIGHT);
 }
 
 // TODO refactor this
@@ -150,7 +156,6 @@ void processCenterOfMass(boolean show)
 PImage getKinectSilhouette() {
    //create a buffer image to work with instead of using sketch pixels
     PImage image = new PImage(KINECT_WIDTH, KINECT_HEIGHT, RGB); 
-    int count = 0;
     for (int i =0; i < userMap.length; i++) {
       // if the pixel is part of the user
       if (userMap[i] != 0) {
@@ -158,15 +163,17 @@ PImage getKinectSilhouette() {
         image.pixels[i] = color(0,0,255);
       } else {
         //set it to the background
-        image.pixels[i] = color(0,0,0); //backgroundImage.pixels[i];
-        count++;
+        image.pixels[i] = color(0,0,0); // backgroundImage.pixels[i];
       }
-    } 
-    
-    //println("getKinectSilhouette() skipped count=" + count); 
+    }
     
     //update the pixel from the inner array to image
     image.updatePixels();
+    
+    // smooth edges
+    image.filter(BLUR, 1);
+    //openCV.inpaint(image);
+    
     // image.resize(WIDTH, HEIGHT);  //TODO SKIP RESIZE
     return image;
 }
@@ -243,6 +250,7 @@ void draw() {
          resultImage.pixels[i]=color(0,0,0);
       }
       // TODO REMOVE END
+      
       resultImage.updatePixels();
              
       PImage silhouette = getKinectSilhouette();
