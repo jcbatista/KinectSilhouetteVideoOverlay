@@ -30,14 +30,15 @@ ConfigManager configMgr;
 boolean tracking = false; 
 int userID;
 int[] userMap;
+int colorMask = 0xffffff; // skip alpha channel
 
 // declare our images 
 PImage resultImage;
 
 int KINECT_WIDTH = 640;
 int KINECT_HEIGHT = 480;
-int WIDTH = 1280;
-int HEIGHT = 720;
+int WIDTH = 640; //WIDTH = 1280;
+int HEIGHT = 480; //HEIGHT = 720;
 
 Movie actionClip;
 
@@ -102,6 +103,22 @@ void setup() {
   userList = new IntVector();
 }
 
+// TODO refactor this
+int maxDumpCount = 1000;
+int totalDumpCount = 0;
+void dumpImage(PImage image, int nbPixels) {
+  if(maxDumpCount <= totalDumpCount) {
+    return;
+  }
+  println("dumping " + nbPixels + "pixels");
+  for (int i=0; i < nbPixels /*resultImage.pixels.length*/; i++) {
+    if(totalDumpCount < maxDumpCount) {
+      println(hex(resultImage.pixels[i]));
+      totalDumpCount++;
+    }
+  }
+}
+
 void convertPosTo720p(PVector position) {
   position.x = position.x * WIDTH / KINECT_WIDTH;
   position.y = position.y * HEIGHT/ KINECT_HEIGHT;
@@ -133,7 +150,7 @@ void processCenterOfMass(boolean show)
 PImage getKinectSilhouette() {
    //create a buffer image to work with instead of using sketch pixels
     PImage image = new PImage(KINECT_WIDTH, KINECT_HEIGHT, RGB); 
-    
+    int count = 0;
     for (int i =0; i < userMap.length; i++) {
       // if the pixel is part of the user
       if (userMap[i] != 0) {
@@ -142,23 +159,26 @@ PImage getKinectSilhouette() {
       } else {
         //set it to the background
         image.pixels[i] = color(0,0,0); //backgroundImage.pixels[i];
+        count++;
       }
     } 
     
+    //println("getKinectSilhouette() skipped count=" + count); 
+    
     //update the pixel from the inner array to image
     image.updatePixels();
-    image.resize(WIDTH, HEIGHT);  
+    // image.resize(WIDTH, HEIGHT);  //TODO SKIP RESIZE
     return image;
 }
 
 void addActionClip(Movie clip) {
   for (int i=0; i < clip.pixels.length; i++) {
-     int maskedColor = clip.pixels[i] & 0xffffff;
+     int maskedColor = clip.pixels[i] & colorMask;
      if (maskedColor != 0) {
        float saturation = saturation(clip.pixels[i]);
        float brightness = brightness(clip.pixels[i]); 
        if(saturation>30 && brightness>100) { 
-         resultImage.pixels[i] = color(0,0,255);//maskedColor;
+         resultImage.pixels[i] = color(0,0,255); //maskedColor;
        }
      }
   }
@@ -182,9 +202,10 @@ void overlayVideo() {
   }
   
   for (int i=0; i < resultImage.pixels.length; i++) {
-    if (resultImage.pixels[i] != 0) {
+    int maskedColor = resultImage.pixels[i] & colorMask;
+    if (maskedColor != 0) {
       resultImage.pixels[i] = clip.movie.pixels[i];
-    }
+    } 
   }
   
   resultImage.updatePixels();
@@ -200,33 +221,50 @@ void addImage(PImage image) {
 }
 
 void draw() {
-  kinect.update();
-  if (tracking) {
-    if(!clipMgr.isStarted()) {
-      clipMgr.start();
+  try {
+    kinect.update();
+    if (tracking) {
+      if(!clipMgr.isStarted()) {
+        clipMgr.start();
+      }
+      
+      //ask kinect for bitmap of user pixels
+      loadPixels();
+      userMap = kinect.userMap();
+     
+      //create a buffer image to work with instead of using sketch pixels
+      resultImage = new PImage(WIDTH, HEIGHT, RGB); 
+          
+      // TODO: action clips need to be 640x480 ...
+      //addActionClip(actionClip);  
+      // TODO REMOVE START
+      // instead initialize the image with zeros...
+      for (int i=0; i < WIDTH * HEIGHT; i++) {
+         resultImage.pixels[i]=color(0,0,0);
+      }
+      // TODO REMOVE END
+      resultImage.updatePixels();
+             
+      PImage silhouette = getKinectSilhouette();
+      addImage(silhouette);
+
+      // dumpImage(resultImage, 1000);
+
+      overlayVideo();
+      
+      image(resultImage, 0, 0);
+      // filter(BLUR,1);
+      processCenterOfMass(false);
+
+    } else {
+      // get the Kinect color image
+      PImage rgbImage = kinect.rgbImage();
+      image(rgbImage, 0, 0);
     }
-    
-    //ask kinect for bitmap of user pixels
-    loadPixels();
-    userMap = kinect.userMap();
-   
-    //create a buffer image to work with instead of using sketch pixels
-    resultImage = new PImage(WIDTH, HEIGHT, RGB); 
-        
-    addActionClip(actionClip);    
-        
-    PImage silhouette = getKinectSilhouette();
-    addImage(silhouette);
-    
-    overlayVideo();
-    image(resultImage, 0, 0);
-    // filter(BLUR,1);
-    processCenterOfMass(false);
-    
-  } else {
-    // get the Kinect color image
-    PImage rgbImage = kinect.rgbImage();
-    image(rgbImage, 0, 0);
+  } catch (Exception e) {
+    println("Houston, we have a problem !!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    e.printStackTrace();
+    exit();
   }
 }
 

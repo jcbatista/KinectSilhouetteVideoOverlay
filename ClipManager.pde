@@ -10,6 +10,7 @@ class ClipManager
   }
   
   Movie LoadMovie(String filename) {
+    println("Loading clip: " + dataPath + filename);
     return new Movie(applet,  dataPath + filename);
   }
   
