@@ -1,5 +1,7 @@
 class ConfigManager {
  
+  // TODO support the new config.json layout...
+  
   ConfigManager() {
     Load();
   }
@@ -8,33 +10,57 @@ class ConfigManager {
     config = loadJSONObject(dataPath("") + "/config.json");
   }
   
-  StringList getClips() {
-    return getClipsByType("clips");
+  List<ClipInfo> getClips() {
+    
+    List<ClipInfo> list = new List<ClipInfo>;
+    
+    JSONArray clips = config.getJSONArray("clips);
+    for(int i=0; i < clips.size(); i++) {
+      ClipInfo clipInfo = new ClipInfo();
+      JSONObject clipData = clips.getJSONObject(i);
+      
+      String silhouette = clipData.getString("silhouette");
+      if(silhouette!=null) {
+        clipInfo.silhouetteFilename = silhouette;
+      }
+      
+      String background = clipData.getString("background");
+      if(background!=null) {
+        clipInfo.backgroundFilename = background;
+      }
+
+      list.append(clipName);
+    }
+    return list; 
   }
   
   StringList getActionClips() {
-    return getClipsByType("actionClips");
-  }
-  
-  private StringList getClipsByType(String type) {
     StringList list = new StringList();
-    JSONArray clips = config.getJSONArray(type);
+    JSONArray clips = config.getJSONArray("actionClips");
     for(int i=0; i < clips.size(); i++) {
       String clipName = clips.getString(i);
       list.append(clipName);
     }
-    return list;  
+    return list;
   }
+ 
   
   void listClips() {
     println("*** Listing defined clips ***");
-    StringList clips = getClips();
-    for (String clipName : clips) {
-        println(clipName);
+    List<ClipInfo> clips = getClips();
+    int count = 1;
+    for (ClipInfo clip : clips) {
+      print(count + ".");
+      if(clip.silhouetteFilename!=null) {
+        print ("silhouette clip ="+ clip.silhouetteFilename + " ");
+      }
+      if(clip.backgroundFilename!=null) {
+        print ("backgroundFilename clip ="+ clip.backgroundFilename);
+      }
+      println();
     }
     println("*** Done. ***");
   }
-  
   
   private JSONObject config;
 }

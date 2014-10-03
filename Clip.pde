@@ -1,9 +1,17 @@
+Class ClipInfo
+{
+  String silhouetteFilename = "";
+  String backgroundFilename = "";
+}
+
 class Clip {
   
-  Clip(Movie movie)
+  // Note: it's asssumed that the silhouette vidoe needs to be longer or identical in length of the background video. 
+  
+  Clip(Movie silhouetteMovie, Movie backgroundMovie)
   {
-    this.movie = movie;
-    
+    this.silhouetteMovie = silhouetteMovie;
+    this.backgroundMovie = backgroundMovie;
     duration = -1;
     startTime = 0;
   }
@@ -23,8 +31,9 @@ class Clip {
  boolean hasCompleted() {
    //return !movie.available();
 
-   if(duration==-1)
+   if(duration==-1) {
      return false;
+   }
    /*
    // TODO REMOVE
    if(count<100)
@@ -40,19 +49,34 @@ class Clip {
  
   void start() {
     // movie.loop();
-    movie.play();
-    movie.volume(0);
+    if(silhouetteMovie != null) {
+      silhouetteMovie.play();
+      silhouetteMovie.volume(0);
+    }
+    
+    if(backgroundMovie != null) {
+      backgroundMovie.play();
+      backgroundMovie.volume(0);
+    }
+    
+    Move movie = silhouetteMovie != null ? silhouetteMovie: backgroundMovie;
     duration = (int) movie.duration();
     startTime = System.nanoTime();
   }
   
   void stop() {
-    movie.stop();
+    if(silhouetteMovie != null) {
+      silhouetteMovie.stop();
+    }
+    if(backgroundMovie != null) {
+      backgroundMovie.stop();
+    }
     startTime = 0;
   }
   
   int duration; // in seconds or -1 if not set
   long startTime; // start time in nanoseconds
-  Movie movie;
+  Movie silhouetteMovie; // can be null
+  Movie backgroundMovie;
 }
 

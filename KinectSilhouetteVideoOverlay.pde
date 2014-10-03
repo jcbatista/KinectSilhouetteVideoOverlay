@@ -25,8 +25,6 @@ import netP5.*;
  *
  */
 
-
-
 SimpleOpenNI kinect;
 ClipManager clipMgr; 
 ConfigManager configMgr;
