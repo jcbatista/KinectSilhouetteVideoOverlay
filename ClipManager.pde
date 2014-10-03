@@ -1,12 +1,29 @@
 import java.util.LinkedList;
 
 class ClipManager
-{
+{  
+  
   ClipManager(PApplet applet)
   {
     this.applet  = applet;
     dataPath = dataPath("") + "/clips/";
     clips = new LinkedList<Clip>();
+    currentOverlayMode = OverlayMode.Silhouette;
+  }
+  
+  OverlayMode currentOverlayMode;
+  
+  // alternate between background and silhouette video overlay
+  OverlayMode getCurrentOverlayMode() {
+    return currentOverlayMode;
+  }
+  
+  void toggleOverlayMode() {
+    if(currentOverlayMode==OverlayMode.Background) {
+      currentOverlayMode = OverlayMode.Silhouette;
+    } else {
+      currentOverlayMode = OverlayMode.Background;
+    }
   }
   
   Movie LoadMovie(String filename) {
@@ -56,7 +73,11 @@ class ClipManager
         currentClip.stop(); // make sure the current clip is actually stopped
         // cycle to the next clip
         currentClipIndex = (currentClipIndex+1) % size;
+        
+        toggleOverlayMode(); // flip the overlay mode
+        
         start();
+ 
       }
     } 
     return currentClip;

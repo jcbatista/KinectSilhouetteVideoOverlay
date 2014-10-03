@@ -25,6 +25,8 @@ import netP5.*;
  *
  */
 
+
+
 SimpleOpenNI kinect;
 ClipManager clipMgr; 
 ConfigManager configMgr;
@@ -37,10 +39,10 @@ int colorMask = 0xffffff; // skip alpha channel
 // declare our images 
 PImage resultImage;
 
-int KINECT_WIDTH = 640;
+int KINECT_WIDTH  = 640;
 int KINECT_HEIGHT = 480;
-int WIDTH = 640;  // WIDTH = 1280;
-int HEIGHT = 480; //HEIGHT = 720;
+int WIDTH  = 640;  // WIDTH = 1280;
+int HEIGHT = 480;  // HEIGHT = 720;
 
 Movie actionClip;
 
@@ -193,33 +195,44 @@ void addActionClip(Movie clip) {
 
 Clip previousClip = null; // TODO remove
 
-void overlayVideo() {
+boolean overlayVideo() {
   Clip clip = clipMgr.getCurrent();
+  OverlayMode overlayMode =  clipMgr.getCurrentOverlayMode();
   
   if(clip!=previousClip) {
-
     previousClip = clip;
-    if(clip==null) println("clip has ended!!!");
-    
+    if(clip==null) {
+      println("clip has ended!!!");
+    }
   }
   
   if(clip==null) {
-    return; // no clip to overlay
+    return false; // no clip to overlay
   }
   
   if(resultImage.pixels.length!=clip.movie.pixels.length) {
     println("Warning: clip size mismatch: skipping...");
-    return;
+    return false;
   }
   
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
-    if (maskedColor != 0) {
-      resultImage.pixels[i] = clip.movie.pixels[i];
-    } 
+    if(overlayMode == OverlayMode.Silhouette) {
+      if (maskedColor != 0) {
+        resultImage.pixels[i] = clip.movie.pixels[i];
+      } 
+    } else {
+      // background "green screen" type overlay
+      if (maskedColor == 0) {
+        resultImage.pixels[i] = clip.movie.pixels[i]; // TODO: Important, this will overwrite the action clip
+      } else {
+        resultImage.pixels[i] = color(0,0,0);
+      }
+    }
   }
   
   resultImage.updatePixels();
+  return true;
 }
 
 void addImage(PImage image) {
@@ -262,10 +275,13 @@ void draw() {
 
       // dumpImage(resultImage, 1000);
 
-      overlayVideo();
+      //  don't display an image if video overlay failed
+      if(!overlayVideo()){
+         return; 
+      }
       
       image(resultImage, 0, 0);
-      // filter(BLUR,1);
+
       processCenterOfMass(false);
 
     } else {
