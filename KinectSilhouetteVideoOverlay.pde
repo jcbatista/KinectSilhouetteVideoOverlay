@@ -11,7 +11,6 @@ import netP5.*;
 /*
  * Description:
  *   use the kinect to obtain a silhoutte and overlay video on top
- *   display the result in 720p (1280x720)
  * 
  *   @Authors: Jean-Claude Batista, 
  *             Comperas (http://itp.nyu.edu/~dbo3/comperas/) (See Authors)
@@ -40,7 +39,7 @@ PImage resultImage;
 
 int KINECT_WIDTH = 640;
 int KINECT_HEIGHT = 480;
-int WIDTH = 640; //WIDTH = 1280;
+int WIDTH = 640;  // WIDTH = 1280;
 int HEIGHT = 480; //HEIGHT = 720;
 
 Movie actionClip;
@@ -208,7 +207,12 @@ void overlayVideo() {
     return; // no clip to overlay
   }
   
-  for (int i=0; i < resultImage.pixels.length; i++) {
+  if(resultImage.pixels.length!=clip.movie.pixels.length) {
+    println("Warning: clip size mismatch: skipping...");
+    return;
+  }
+  
+  for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
     if (maskedColor != 0) {
       resultImage.pixels[i] = clip.movie.pixels[i];
@@ -228,7 +232,7 @@ void addImage(PImage image) {
 }
 
 void draw() {
-  try {
+  //try {
     kinect.update();
     if (tracking) {
       if(!clipMgr.isStarted()) {
@@ -269,11 +273,13 @@ void draw() {
       PImage rgbImage = kinect.rgbImage();
       image(rgbImage, 0, 0);
     }
+  /*
   } catch (Exception e) {
     println("Houston, we have a problem !!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     e.printStackTrace();
     exit();
   }
+  */
 }
 
 // Called every time a new frame is available to read
