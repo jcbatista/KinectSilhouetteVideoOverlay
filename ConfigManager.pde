@@ -1,3 +1,5 @@
+import java.util.LinkedList;
+
 class ConfigManager {
  
   // TODO support the new config.json layout...
@@ -10,11 +12,10 @@ class ConfigManager {
     config = loadJSONObject(dataPath("") + "/config.json");
   }
   
-  List<ClipInfo> getClips() {
+  LinkedList<ClipInfo> getClips() {
+    LinkedList<ClipInfo> list = new LinkedList<ClipInfo>();
     
-    List<ClipInfo> list = new List<ClipInfo>;
-    
-    JSONArray clips = config.getJSONArray("clips);
+    JSONArray clips = config.getJSONArray("clips");
     for(int i=0; i < clips.size(); i++) {
       ClipInfo clipInfo = new ClipInfo();
       JSONObject clipData = clips.getJSONObject(i);
@@ -29,7 +30,7 @@ class ConfigManager {
         clipInfo.backgroundFilename = background;
       }
 
-      list.append(clipName);
+      list.add(clipInfo);
     }
     return list; 
   }
@@ -47,7 +48,7 @@ class ConfigManager {
   
   void listClips() {
     println("*** Listing defined clips ***");
-    List<ClipInfo> clips = getClips();
+    LinkedList<ClipInfo> clips = getClips();
     int count = 1;
     for (ClipInfo clip : clips) {
       print(count + ".");

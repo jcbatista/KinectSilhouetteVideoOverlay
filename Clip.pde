@@ -1,21 +1,33 @@
-Class ClipInfo
-{
-  String silhouetteFilename = "";
-  String backgroundFilename = "";
-}
+import processing.video.*;
 
 class Clip {
   
   // Note: it's asssumed that the silhouette vidoe needs to be longer or identical in length of the background video. 
   
-  Clip(Movie silhouetteMovie, Movie backgroundMovie)
+  Clip(ClipInfo clipInfo)
   {
-    this.silhouetteMovie = silhouetteMovie;
-    this.backgroundMovie = backgroundMovie;
+    this.clipInfo = clipInfo;
+    this.silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
+    this.backgroundMovie = loadMovie(clipInfo.backgroundFilename);
     duration = -1;
     startTime = 0;
   }
   
+  boolean hasSilhouette() {
+    return silhouetteMovie != null;
+  }
+  
+  boolean hasBackground() {
+    return backgroundMovie != null;
+  }
+  
+  Movie loadMovie(String filename) {
+    if(filename==null || filename=="") {
+      return null;
+    }  
+    return globalLoadMovie(filename);
+  }
+
   void setDuration(int duration) {
     this.duration = duration;
   }
@@ -49,17 +61,17 @@ class Clip {
  
   void start() {
     // movie.loop();
-    if(silhouetteMovie != null) {
+    if(hasSilhouette()) {
       silhouetteMovie.play();
       silhouetteMovie.volume(0);
     }
     
-    if(backgroundMovie != null) {
+    if(hasBackground()) {
       backgroundMovie.play();
       backgroundMovie.volume(0);
     }
     
-    Move movie = silhouetteMovie != null ? silhouetteMovie: backgroundMovie;
+    Movie movie = silhouetteMovie != null ? silhouetteMovie: backgroundMovie;
     duration = (int) movie.duration();
     startTime = System.nanoTime();
   }
@@ -76,6 +88,7 @@ class Clip {
   
   int duration; // in seconds or -1 if not set
   long startTime; // start time in nanoseconds
+  ClipInfo clipInfo;
   Movie silhouetteMovie; // can be null
   Movie backgroundMovie;
 }

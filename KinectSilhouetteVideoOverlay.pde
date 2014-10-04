@@ -1,5 +1,5 @@
+import java.util.LinkedList;
 //import gab.opencv.*;
-import processing.video.*;
 //import java.awt.*;
 import processing.video.*;
 import processing.opengl.*; 
@@ -55,6 +55,12 @@ String oscAdress = "127.0.0.1";
 int oscServerPort = 13000;
 int oscClientPort = 12000;
 
+
+// Movie requires a Processing applet reference, therefore it needs to remain in the root class
+Movie globalLoadMovie(String filename) {
+    return new Movie(this, dataPath("") + "/clips/" + filename);
+}
+
 void oscSend(PVector position) {
   // TODO need to add another field to identify the user ...
   // and one to identify which Kinect we're using
@@ -65,19 +71,15 @@ void oscSend(PVector position) {
   oscP5.send(msg, myRemoteLocation); 
 }
 
-Movie LoadMovie(String filename) {
-  return new Movie(this, dataPath("") + "/clips/" + filename);
-}
-
 void setup() {
   size(WIDTH, HEIGHT);
   configMgr = new ConfigManager();
   configMgr.listClips();
   
   clipMgr = new ClipManager(this);
-  clipMgr.add(configMgr.getClips());
-  
-  actionClip = LoadMovie(configMgr.getActionClips().get(0)); // grab the fist action clip: TODO add support for multiple clips
+  LinkedList<ClipInfo> clipInfoList = configMgr.getClips();
+  clipMgr.add(clipInfoList);
+  actionClip = globalLoadMovie(configMgr.getActionClips().get(0)); // grab the fist action clip: TODO add support for multiple clips
   actionClip.loop();
   
   kinect = new SimpleOpenNI(this);
@@ -208,21 +210,23 @@ boolean overlayVideo() {
     return false; // no clip to overlay
   }
   
-  if(resultImage.pixels.length!=clip.movie.pixels.length) {
+  if(resultImage.pixels.length!=clip.silhouetteMovie.pixels.length) {
     println("Warning: clip size mismatch: skipping...");
     return false;
   }
+  
+  // TODO support background clip...
   
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
     if(overlayMode == OverlayMode.Silhouette) {
       if (maskedColor != 0) {
-        resultImage.pixels[i] = clip.movie.pixels[i];
+        resultImage.pixels[i] = clip.silhouetteMovie.pixels[i];
       } 
     } else {
       // background "green screen" type overlay
       if (maskedColor == 0) {
-        resultImage.pixels[i] = clip.movie.pixels[i]; // TODO: Important, this will overwrite the action clip
+        resultImage.pixels[i] = clip.silhouetteMovie.pixels[i]; // TODO: Important, this will overwrite the action clip
       } else {
         resultImage.pixels[i] = color(0,0,0);
       }

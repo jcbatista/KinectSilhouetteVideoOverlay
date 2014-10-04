@@ -1,8 +1,7 @@
 import java.util.LinkedList;
 
 class ClipManager
-{  
-  
+{
   ClipManager(PApplet applet)
   {
     this.applet  = applet;
@@ -31,22 +30,20 @@ class ClipManager
     return new Movie(applet,  dataPath + filename);
   }
   
-  void add(String filename)
-  {
-    this.add(filename, -1);
+  void add(ClipInfo clipInfo) {
+    this.add(clipInfo);
   }
   
-  void add(StringList list)
+  void add(LinkedList<ClipInfo> clipInfolist)
   {
-    for (String filename : list) {
-      this.add(filename, -1);
+    for (ClipInfo clipInfo : clipInfolist) {  
+      this.add(clipInfo, -1);
     }
   }
   
-  void add(String filename, int duration)
+  void add(ClipInfo clipInfo, int duration)
   {
-    Movie movie = LoadMovie(filename);
-    Clip clip = new Clip(movie);
+    Clip clip = new Clip(clipInfo);
     clip.setDuration(duration);
     clips.add(clip);
   }
