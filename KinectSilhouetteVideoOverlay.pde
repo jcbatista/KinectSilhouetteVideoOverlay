@@ -225,24 +225,10 @@ boolean overlayVideo() {
   
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
-    if(hasSilhouette && hasBackground) {
-      if (maskedColor != 0) {
-        resultImage.pixels[i] = clip.silhouetteMovie.pixels[i];
-      } else {
-        resultImage.pixels[i] = clip.backgroundMovie.pixels[i];
-      }
-    } else if(hasSilhouette) {
-      if (maskedColor != 0) {
-        resultImage.pixels[i] = clip.silhouetteMovie.pixels[i];
-      } else {
-        resultImage.pixels[i] = color(0,0,0);
-      }
-    }else if(hasBackground) {
-      if (maskedColor == 0) {
-        resultImage.pixels[i] = clip.backgroundMovie.pixels[i];
-      } else {
-        resultImage.pixels[i] = color(0,0,0);
-      }      
+    if (maskedColor != 0) {
+      resultImage.pixels[i] = hasSilhouette ? clip.silhouetteMovie.pixels[i] : color(0,0,0);
+    } else {
+      resultImage.pixels[i] = hasBackground ? clip.backgroundMovie.pixels[i] : color(0,0,0);
     }
   }
   
