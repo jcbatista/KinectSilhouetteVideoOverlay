@@ -3,31 +3,38 @@ import java.util.LinkedList;
 class ConfigManager {
  
   // TODO support the new config.json layout...
-  
+  private JSONObject configJSON;
+    
   ConfigManager() {
-    Load();
+    load();
   }
   
-  void Load() {
-    config = loadJSONObject(dataPath("") + "/config.json");
+  void load() {
+    String configFilePath = dataPath("") + "/config.json";
+    configJSON = loadJSONObject(configFilePath);
   }
   
   LinkedList<ClipInfo> getClips() {
+    
     LinkedList<ClipInfo> list = new LinkedList<ClipInfo>();
     
-    JSONArray clips = config.getJSONArray("clips");
+    JSONArray clips = configJSON.getJSONArray("clips");
     for(int i=0; i < clips.size(); i++) {
       ClipInfo clipInfo = new ClipInfo();
       JSONObject clipData = clips.getJSONObject(i);
       
-      String silhouette = clipData.getString("silhouette");
-      if(silhouette!=null) {
-        clipInfo.silhouetteFilename = silhouette;
+      if(clipData.hasKey("silhouette")) {
+        String silhouette = clipData.getString("silhouette");
+        if(silhouette!=null) {
+          clipInfo.silhouetteFilename = silhouette;
+        }
       }
       
-      String background = clipData.getString("background");
-      if(background!=null) {
-        clipInfo.backgroundFilename = background;
+      if(clipData.hasKey("background")) {
+        String background = clipData.getString("background");
+        if(background!=null) {
+          clipInfo.backgroundFilename = background;
+        }
       }
 
       list.add(clipInfo);
@@ -37,7 +44,7 @@ class ConfigManager {
   
   StringList getActionClips() {
     StringList list = new StringList();
-    JSONArray clips = config.getJSONArray("actionClips");
+    JSONArray clips = configJSON.getJSONArray("actionClips");
     for(int i=0; i < clips.size(); i++) {
       String clipName = clips.getString(i);
       list.append(clipName);
@@ -62,6 +69,5 @@ class ConfigManager {
     }
     println("*** Done. ***");
   }
-  
-  private JSONObject config;
+
 }

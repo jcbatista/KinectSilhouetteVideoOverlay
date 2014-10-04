@@ -55,7 +55,6 @@ String oscAdress = "127.0.0.1";
 int oscServerPort = 13000;
 int oscClientPort = 12000;
 
-
 // Movie requires a Processing applet reference, therefore it needs to remain in the root class
 Movie globalLoadMovie(String filename) {
     return new Movie(this, dataPath("") + "/clips/" + filename);
