@@ -196,6 +196,10 @@ Clip previousClip = null; // TODO remove
 
 boolean overlayVideo() {
   Clip clip = clipMgr.getCurrent();
+  boolean hasBackground = clip.hasBackground();
+  boolean hasSilhouette = clip.hasSilhouette();
+  
+  // TODO get rid of overlay mode (DEPRECATED)
   OverlayMode overlayMode =  clipMgr.getCurrentOverlayMode();
   
   if(clip!=previousClip) {
@@ -209,26 +213,36 @@ boolean overlayVideo() {
     return false; // no clip to overlay
   }
   
-  if(resultImage.pixels.length!=clip.silhouetteMovie.pixels.length) {
-    println("Warning: clip size mismatch: skipping...");
+  if(hasSilhouette && resultImage.pixels.length!=clip.silhouetteMovie.pixels.length) {
+    println("Warning: silhouette clip size mismatch: skipping...");
     return false;
   }
   
-  // TODO support background clip...
+  if(hasBackground && resultImage.pixels.length!=clip.backgroundMovie.pixels.length) {
+    println("Warning: background clip size mismatch: skipping...");
+    return false;
+  }
   
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
-    if(overlayMode == OverlayMode.Silhouette) {
+    if(hasSilhouette && hasBackground) {
       if (maskedColor != 0) {
         resultImage.pixels[i] = clip.silhouetteMovie.pixels[i];
-      } 
-    } else {
-      // background "green screen" type overlay
-      if (maskedColor == 0) {
-        resultImage.pixels[i] = clip.silhouetteMovie.pixels[i]; // TODO: Important, this will overwrite the action clip
+      } else {
+        resultImage.pixels[i] = clip.backgroundMovie.pixels[i];
+      }
+    } else if(hasSilhouette) {
+      if (maskedColor != 0) {
+        resultImage.pixels[i] = clip.silhouetteMovie.pixels[i];
       } else {
         resultImage.pixels[i] = color(0,0,0);
       }
+    }else if(hasBackground) {
+      if (maskedColor == 0) {
+        resultImage.pixels[i] = clip.backgroundMovie.pixels[i];
+      } else {
+        resultImage.pixels[i] = color(0,0,0);
+      }      
     }
   }
   
