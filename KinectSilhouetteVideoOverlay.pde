@@ -28,6 +28,7 @@ import netP5.*;
 SimpleOpenNI kinect;
 ClipManager clipMgr; 
 ConfigManager configMgr;
+SilhouetteFrameCache silhouetteCache;
 
 boolean tracking = false; 
 int userID;
@@ -74,6 +75,8 @@ void setup() {
   size(WIDTH, HEIGHT);
   configMgr = new ConfigManager();
   configMgr.listClips();
+  
+  silhouetteCache = new SilhouetteFrameCache();
   
   clipMgr = new ClipManager(this);
   LinkedList<ClipInfo> clipInfoList = configMgr.getClips();
@@ -156,22 +159,29 @@ void processCenterOfMass(boolean show)
 PImage getKinectSilhouette() {
    //create a buffer image to work with instead of using sketch pixels
     PImage image = new PImage(KINECT_WIDTH, KINECT_HEIGHT, RGB); 
+    
+    SilhouetteFrame frame = new SilhouetteFrame();
+    
     for (int i =0; i < userMap.length; i++) {
       // if the pixel is part of the user
       if (userMap[i] != 0) {
         // set the pixel to the color pixel
         image.pixels[i] = color(0,0,255);
+        frame.set(i, true);
       } else {
         //set it to the background
         image.pixels[i] = color(0,0,0); // backgroundImage.pixels[i];
+        frame.set(i, false);
       }
     }
+    
+    silhouetteCache.add(frame);
     
     //update the pixel from the inner array to image
     image.updatePixels();
     
     // smooth edges
-    image.filter(BLUR, 1);
+    image.filter(BLUR, 1); // TODO this shouldn't be done here!!!
     //openCV.inpaint(image);
     
     // image.resize(WIDTH, HEIGHT);  //TODO SKIP RESIZE
@@ -271,8 +281,8 @@ void draw() {
       
       resultImage.updatePixels();
              
-      PImage silhouette = getKinectSilhouette();
-      addImage(silhouette);
+      PImage silhouette = getKinectSilhouette(); // should return a frame
+      addImage(silhouette); // TODO should be addFrame
 
       // dumpImage(resultImage, 1000);
 

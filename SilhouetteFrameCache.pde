@@ -12,6 +12,10 @@ class SilhouetteFrame {
 
 class SilhouetteFrameCache {
 
+  SilhouetteFrameCache() {
+    cache = new LinkedList<SilhouetteFrame>();
+  }
+  
   void add(SilhouetteFrame frame) {
     if(cache.size() > maxFrames) {
       cache.remove();
@@ -36,8 +40,8 @@ class SilhouetteFrameCache {
     return frame;
   }
     
-  private int currentFrameIndex = -1;
   private LinkedList<SilhouetteFrame> cache;
+  private int currentFrameIndex = -1;
   private int maxFrames = 53280; // ~ 1 min  
 }
 
