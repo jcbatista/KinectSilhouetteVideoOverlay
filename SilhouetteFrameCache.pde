@@ -18,6 +18,11 @@ class SilhouetteFrameCache {
   }
   
   void add(SilhouetteFrame frame) {
+    if(!playbackReady && canPlayback()) {
+      println("SilhouetteFrameCache ready for playback ...");
+      playbackReady = true;
+    }
+    
     if(cache.size() > maxFrames) {
       cache.remove();
     }
@@ -25,7 +30,7 @@ class SilhouetteFrameCache {
   }
   
   boolean canPlayback() {
-    return cache.size() >= 240; // need at least 10 seconds to allow playback of cached silouette
+    return cache.size() >= minFrames; 
   }
   
   SilhouetteFrame getCurrent() {
@@ -40,9 +45,10 @@ class SilhouetteFrameCache {
     }
     return frame;
   }
-    
+  private boolean playbackReady = false;
   private LinkedList<SilhouetteFrame> cache;
   private int currentFrameIndex = -1;
-  private int maxFrames = 53280; // ~ 1 min  
+  private int minFrames = 240; // need at least 10 seconds to allow playback of cached silouette
+  private int maxFrames = 720; // ~30 sec ...
 }
 

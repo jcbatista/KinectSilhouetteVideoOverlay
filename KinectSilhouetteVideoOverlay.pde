@@ -156,9 +156,26 @@ void processCenterOfMass(boolean show)
   }
 }
 
-SilhouetteFrame getKinectSilhouette() {    
-    SilhouetteFrame frame = new SilhouetteFrame();
+boolean hasUserMap = false;
+SilhouetteFrame getSilhouette() { 
+  SilhouetteFrame frame =  null;
+  
+  if(hasUserMap && userMap.length == 0) {
+    println("lost usermap !!!!!!!!!!!!!!!!!!!!");
+    hasUserMap = false;
+  } else if(!hasUserMap && userMap.length > 0) {
+    println("got usermap .....................");
+    hasUserMap = true;
+  }
+
+  if(userMap.length > 0) {
     
+    if(usingFrameCache) {
+      println("Starting using Kinect user map frames ...");
+      usingFrameCache = false;
+    } 
+    
+    frame = new SilhouetteFrame();
     for (int i =0; i < userMap.length; i++) {
       // if the pixel is part of the user
       if (userMap[i] != 0) {
@@ -167,10 +184,18 @@ SilhouetteFrame getKinectSilhouette() {
         frame.set(i, false);
       }
     }
-    
     silhouetteCache.add(frame);
-
-    return frame;
+  } else {
+    // if the cache has enough frames from playback get the current one
+    if(silhouetteCache.canPlayback()) {
+      if(!usingFrameCache) {
+        println("Starting using Silhouette cache frames ...");
+        usingFrameCache = true;
+      } 
+      frame = silhouetteCache.getCurrent();
+    }
+  }
+  return frame;
 }
 
 void addActionClip(Movie clip) {
@@ -233,10 +258,13 @@ boolean overlayVideo() {
 
 // TODO: we shouldn't be doing this extra copy
 void addSilhouette(SilhouetteFrame frame) {
-    for (int i=0; i < frame.size(); i++) {
-     if (frame.get(i)) {
-       resultImage.pixels[i] = color(0,0,255);       
-     }
+  if(frame==null) {
+    return;
+  }
+  for (int i=0; i < frame.size(); i++) {
+    if (frame.get(i)) {
+      resultImage.pixels[i] = color(0,0,255);       
+    }
   }
   resultImage.updatePixels();
 }
@@ -267,7 +295,7 @@ void draw() {
       
       resultImage.updatePixels();
              
-      SilhouetteFrame silhouette = getKinectSilhouette(); // should return a frame
+      SilhouetteFrame silhouette = getSilhouette(); // should return a frame
       addSilhouette(silhouette);
     
       // smooth edges
@@ -283,7 +311,7 @@ void draw() {
       image(resultImage, 0, 0);
 
       processCenterOfMass(false);
-
+      
     } else {
       // get the Kinect color image
       PImage rgbImage = kinect.rgbImage();
@@ -303,21 +331,18 @@ void movieEvent(Movie m) {
   m.read();
 }
 
-void onNewUser(SimpleOpenNI curContext, int userId)
-{
+void onNewUser(SimpleOpenNI curContext, int userId) {
  userID = userId;
   tracking = true;
   println("tracking");
   //curContext.startTrackingSkeleton(userId);
 }
 
-void onLostUser(SimpleOpenNI curContext, int userId)
-{
+void onLostUser(SimpleOpenNI curContext, int userId) {
   println("onLostUser - userId: " + userId);
 }
 
-void onVisibleUser(SimpleOpenNI curContext, int userId)
-{
+void onVisibleUser(SimpleOpenNI curContext, int userId) {
   //println("onVisibleUser - userId: " + userId);
 }
 
@@ -330,3 +355,5 @@ void oscEvent(OscMessage theOscMessage) {
   println(" typetag: "+theOscMessage.typetag());
   */
 }
+
+private boolean usingFrameCache = true;
