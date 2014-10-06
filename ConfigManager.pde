@@ -65,6 +65,7 @@ class ConfigManager {
       if(clip.backgroundFilename!=null) {
         print ("backgroundFilename clip ="+ clip.backgroundFilename);
       }
+      count++;
       println();
     }
     println("*** Done. ***");

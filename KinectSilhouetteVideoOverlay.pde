@@ -58,7 +58,7 @@ int oscClientPort = 12000;
 
 // Movie requires a Processing applet reference, therefore it needs to remain in the root class
 Movie globalLoadMovie(String filename) {
-    return new Movie(this, dataPath("") + "/clips/" + filename);
+  return new Movie(this, dataPath("") + "/clips/" + filename);
 }
 
 void oscSend(PVector position) {
@@ -84,7 +84,7 @@ void setup() {
   actionClip = globalLoadMovie(configMgr.getActionClips().get(0)); // grab the fist action clip: TODO add support for multiple clips
   actionClip.loop();
   
-  kinect = new SimpleOpenNI(this);
+  kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
   if(kinect.isInit() == false) {  
      println("Can't init SimpleOpenNI, maybe the camera is not connected!"); 
      exit();
@@ -159,17 +159,20 @@ void processCenterOfMass(boolean show)
 boolean hasUserMap = false;
 SilhouetteFrame getSilhouette() { 
   SilhouetteFrame frame =  null;
+  userMap = kinect.userMap();
+  kinect.getUsers(userList);
   
-  if(hasUserMap && userMap.length == 0) {
-    println("lost usermap !!!!!!!!!!!!!!!!!!!!");
+  long userCount = userList.size();
+  if(hasUserMap && userCount == 0) {
+    println("actually tracking users !!!!!!!!!!!!!!!!!!!!");
     hasUserMap = false;
-  } else if(!hasUserMap && userMap.length > 0) {
-    println("got usermap .....................");
+  } else if(!hasUserMap && userCount > 0) {
+    println("no longer tracking users ****");
     hasUserMap = true;
   }
 
-  if(userMap.length > 0) {
-    
+  if(userMap.length > 0 && userCount > 0) {
+       
     if(usingFrameCache) {
       println("Starting using Kinect user map frames ...");
       usingFrameCache = false;
@@ -189,7 +192,7 @@ SilhouetteFrame getSilhouette() {
     // if the cache has enough frames from playback get the current one
     if(silhouetteCache.canPlayback()) {
       if(!usingFrameCache) {
-        println("Starting using Silhouette cache frames ...");
+        println("Starting using Silhouette cached frames ...");
         usingFrameCache = true;
       } 
       frame = silhouetteCache.getCurrent();
@@ -279,7 +282,6 @@ void draw() {
       
       //ask kinect for bitmap of user pixels
       loadPixels();
-      userMap = kinect.userMap();
      
       //create a buffer image to work with instead of using sketch pixels
       resultImage = new PImage(WIDTH, HEIGHT, RGB); 

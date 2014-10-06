@@ -45,6 +45,7 @@ class SilhouetteFrameCache {
     }
     return frame;
   }
+  
   private boolean playbackReady = false;
   private LinkedList<SilhouetteFrame> cache;
   private int currentFrameIndex = -1;
