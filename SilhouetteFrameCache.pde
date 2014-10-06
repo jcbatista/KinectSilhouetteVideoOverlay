@@ -8,6 +8,7 @@ class SilhouetteFrame {
   
   boolean get(int n) { return bitSet.get(n); }
   void set(int n, boolean value) { bitSet.set(n, value); }
+  int size() { return bitSet.size(); }
 }
 
 class SilhouetteFrameCache {
