@@ -55,7 +55,7 @@ class ClipManager
     currentClip = clips.get(currentClipIndex);
     if(currentClip != null) {
       
-      println("*********** Now playing clip index:" + currentClipIndex + " of " + clips.size());
+      println("*********** Now playing clip " + currentClipIndex + " of " + clips.size());
       currentClip.start();
       started = true;
     } else {

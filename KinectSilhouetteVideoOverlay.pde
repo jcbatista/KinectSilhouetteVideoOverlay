@@ -163,12 +163,12 @@ SilhouetteFrame getSilhouette() {
   kinect.getUsers(userList);
   
   long userCount = userList.size();
-  if(hasUserMap && userCount == 0) {
+  if(!hasUserMap && userCount > 0) {
     println("actually tracking users !!!!!!!!!!!!!!!!!!!!");
-    hasUserMap = false;
-  } else if(!hasUserMap && userCount > 0) {
-    println("no longer tracking users ****");
     hasUserMap = true;
+  } else if(hasUserMap && userCount == 0) {
+    println("no longer tracking users ###################");
+    hasUserMap = false;
   }
 
   if(userMap.length > 0 && userCount > 0) {
@@ -179,7 +179,7 @@ SilhouetteFrame getSilhouette() {
     } 
     
     frame = new SilhouetteFrame();
-    for (int i =0; i < userMap.length; i++) {
+    for (int i = 0; i < userMap.length; i++) {
       // if the pixel is part of the user
       if (userMap[i] != 0) {
         frame.set(i, true);
