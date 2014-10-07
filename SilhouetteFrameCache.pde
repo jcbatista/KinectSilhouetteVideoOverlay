@@ -18,15 +18,19 @@ class SilhouetteFrameCache {
   }
   
   void add(SilhouetteFrame frame) {
-    if(!playbackReady && canPlayback()) {
-      println("SilhouetteFrameCache ready for playback ...");
-      playbackReady = true;
+    if(frame==null) {
+      return;
     }
     
     if(cache.size() > maxFrames) {
       cache.remove();
     }
     cache.add(frame);
+    
+    if(!playbackReady && canPlayback()) {
+      println("SilhouetteFrameCache ready for playback ...");
+      playbackReady = true;
+    }
   }
   
   boolean canPlayback() {

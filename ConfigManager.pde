@@ -63,7 +63,7 @@ class ConfigManager {
         print ("silhouette clip ="+ clip.silhouetteFilename + " ");
       }
       if(clip.backgroundFilename!=null) {
-        print ("backgroundFilename clip ="+ clip.backgroundFilename);
+        print ("backgroundFilename clip = "+ clip.backgroundFilename);
       }
       count++;
       println();

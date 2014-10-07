@@ -161,7 +161,6 @@ SilhouetteFrame getSilhouette() {
   SilhouetteFrame frame =  null;
   userMap = kinect.userMap();
   kinect.getUsers(userList);
-  
   long userCount = userList.size();
   if(!hasUserMap && userCount > 0) {
     println("actually tracking users !!!!!!!!!!!!!!!!!!!!");
@@ -192,7 +191,7 @@ SilhouetteFrame getSilhouette() {
     // if the cache has enough frames from playback get the current one
     if(silhouetteCache.canPlayback()) {
       if(!usingFrameCache) {
-        println("Starting using Silhouette cached frames ...");
+        println("starting using Silhouette cached frames ...");
         usingFrameCache = true;
       } 
       frame = silhouetteCache.getCurrent();
@@ -237,12 +236,12 @@ boolean overlayVideo() {
   }
   
   if(hasSilhouette && resultImage.pixels.length!=clip.silhouetteMovie.pixels.length) {
-    println("Warning: silhouette clip size mismatch: skipping...");
+    println("warning: silhouette clip size mismatch: skipping...");
     return false;
   }
   
   if(hasBackground && resultImage.pixels.length!=clip.backgroundMovie.pixels.length) {
-    println("Warning: background clip size mismatch: skipping...");
+    println("warning: background clip size mismatch: skipping...");
     return false;
   }
   
@@ -259,12 +258,16 @@ boolean overlayVideo() {
   return true;
 }
 
-// TODO: we shouldn't be doing this extra copy
 void addSilhouette(SilhouetteFrame frame) {
   if(frame==null) {
-    println("warning. addSilhouette(): got a null frame, ignoring ...");
+    // minimize this log message
+    if(previousFrame!=null) {
+       println("warning. addSilhouette(): got a null frame, ignoring ...");
+    }
     return;
   }
+  previousFrame = frame;
+  // TODO: we shouldn't be doing this extra copy
   for (int i=0; i < frame.size(); i++) {
     if (frame.get(i)) {
       resultImage.pixels[i] = color(0,0,255);       
@@ -359,4 +362,5 @@ void oscEvent(OscMessage theOscMessage) {
   */
 }
 
+private SilhouetteFrame previousFrame = null;
 private boolean usingFrameCache = true;
