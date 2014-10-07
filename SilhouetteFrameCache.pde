@@ -38,18 +38,20 @@ class SilhouetteFrameCache {
     int size = cache.size();
     if(size > 0) {
       currentFrameIndex++;
-      if(currentFrameIndex == -1) {
+      if(currentFrameIndex != -1) {
         currentFrameIndex = (currentFrameIndex + 1) % size;
         frame = cache.get(currentFrameIndex);
       }          
     }
+    
+    // println("currentFrameIndex=" + currentFrameIndex + " of " + size);
     return frame;
   }
   
   private boolean playbackReady = false;
   private LinkedList<SilhouetteFrame> cache;
   private int currentFrameIndex = -1;
-  private int minFrames = 240; // need at least 10 seconds to allow playback of cached silouette
-  private int maxFrames = 720; // ~30 sec ...
+  private int minFrames = 240;  // need at least 10 seconds to allow playback of cached silouette
+  private int maxFrames = 8000; //~ 5 mins
 }
 

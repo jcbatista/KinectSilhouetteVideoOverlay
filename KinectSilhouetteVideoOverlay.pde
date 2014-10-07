@@ -262,6 +262,7 @@ boolean overlayVideo() {
 // TODO: we shouldn't be doing this extra copy
 void addSilhouette(SilhouetteFrame frame) {
   if(frame==null) {
+    println("warning. addSilhouette(): got a null frame, ignoring ...");
     return;
   }
   for (int i=0; i < frame.size(); i++) {
