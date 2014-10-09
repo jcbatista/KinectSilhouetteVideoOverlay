@@ -1,5 +1,11 @@
 import java.util.BitSet;
 
+class SilhouetteCacheData {
+  boolean enabled = false;
+  int minFrames = 240;
+  int maxFrames = 8000;
+}
+
 class SilhouetteFrame {
   private BitSet bitSet;
   SilhouetteFrame() {
@@ -13,12 +19,15 @@ class SilhouetteFrame {
 
 class SilhouetteFrameCache {
 
-  SilhouetteFrameCache() {
+  SilhouetteFrameCache(SilhouetteCacheData data) {
     cache = new LinkedList<SilhouetteFrame>();
+    enabled = data.enabled;
+    minFrames = data.minFrames;
+    maxFrames = data.maxFrames;
   }
   
   void add(SilhouetteFrame frame) {
-    if(frame==null) {
+    if(!enabled || frame==null) {
       return;
     }
     
@@ -34,28 +43,32 @@ class SilhouetteFrameCache {
   }
   
   boolean canPlayback() {
-    return cache.size() >= minFrames; 
+    boolean success = false;
+    if(enabled){
+      success = cache.size() >= minFrames; 
+    }
+    return success;
   }
   
   SilhouetteFrame getCurrent() {
     SilhouetteFrame frame = null;
     int size = cache.size();
-    if(size > 0) {
+    if(enabled && size > 0) {
       currentFrameIndex++;
       if(currentFrameIndex != -1) {
         currentFrameIndex = (currentFrameIndex + 1) % size;
         frame = cache.get(currentFrameIndex);
       }          
     }
-    
     // println("currentFrameIndex=" + currentFrameIndex + " of " + size);
     return frame;
   }
   
+  private boolean enabled = false;
   private boolean playbackReady = false;
   private LinkedList<SilhouetteFrame> cache;
   private int currentFrameIndex = -1;
-  private int minFrames = 240;  // need at least 10 seconds to allow playback of cached silouette
-  private int maxFrames = 8000; //~ 5 mins
+  private int minFrames = 0; 
+  private int maxFrames = 0;
 }
 

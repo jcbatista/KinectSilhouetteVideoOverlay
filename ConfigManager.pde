@@ -1,10 +1,7 @@
 import java.util.LinkedList;
 
 class ConfigManager {
- 
-  // TODO support the new config.json layout...
-  private JSONObject configJSON;
-    
+
   ConfigManager() {
     load();
   }
@@ -14,8 +11,7 @@ class ConfigManager {
     configJSON = loadJSONObject(configFilePath);
   }
   
-  LinkedList<ClipInfo> getClips() {
-    
+  LinkedList<ClipInfo> getClips() {  
     LinkedList<ClipInfo> list = new LinkedList<ClipInfo>();
     
     JSONArray clips = configJSON.getJSONArray("clips");
@@ -40,6 +36,34 @@ class ConfigManager {
       list.add(clipInfo);
     }
     return list; 
+  }
+  
+  // return an identifier for the installation (since there could be multiple Kinects/Projectors) 
+  String getName() {
+    return configJSON.getString("name");
+  }
+  
+  int getSmoothSilhouette() {
+    return configJSON.getInt("smoothSilhouette");
+  }
+  
+  SilhouetteCacheData getSilhouetteCacheSettings() {
+    SilhouetteCacheData data = new SilhouetteCacheData();
+    JSONObject dataJSON = configJSON.getJSONObject("silhouetteCache");
+    data.enabled = dataJSON.getBoolean("enabled");
+    data.minFrames = dataJSON.getInt("minFrames");
+    data.maxFrames = dataJSON.getInt("maxFrames");
+    return data;
+  }
+  
+  OscConfigData getOscSettings() {
+    OscConfigData data = new OscConfigData();
+    JSONObject dataJSON = configJSON.getJSONObject("osc");
+    data.enabled = dataJSON.getBoolean("enabled");
+    data.serverPort = dataJSON.getInt("serverPort");
+    data.clientAddress = dataJSON.getString("clientAddress");
+    data.clientPort = dataJSON.getInt("clientPort");
+    return data;
   }
   
   StringList getActionClips() {
@@ -70,5 +94,6 @@ class ConfigManager {
     }
     println("*** Done. ***");
   }
-
+     
+  private JSONObject configJSON;  
 }

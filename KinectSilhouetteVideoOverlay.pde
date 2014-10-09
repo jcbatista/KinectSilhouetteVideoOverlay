@@ -5,7 +5,7 @@ import processing.video.*;
 import processing.opengl.*; 
 import SimpleOpenNI.*;
 
-import oscP5.*;
+
 import netP5.*;
 
 /*
@@ -28,12 +28,14 @@ import netP5.*;
 SimpleOpenNI kinect;
 ClipManager clipMgr; 
 ConfigManager configMgr;
+OscManager oscManager;
 SilhouetteFrameCache silhouetteCache;
 
 boolean tracking = false; 
 int userID;
 int[] userMap;
 int colorMask = 0xffffff; // skip alpha channel
+int smooth = 0;
 
 // declare our images 
 PImage resultImage;
@@ -45,30 +47,15 @@ int HEIGHT = 480;  // HEIGHT = 720;
 
 Movie actionClip;
 
-OscP5 oscP5;
 NetAddress myRemoteLocation;
 
 IntVector userList;
 
 //OpenCV openCV;
 
-String oscAdress = "127.0.0.1";
-int oscServerPort = 13000;
-int oscClientPort = 12000;
-
 // Movie requires a Processing applet reference, therefore it needs to remain in the root class
 Movie globalLoadMovie(String filename) {
   return new Movie(this, dataPath("") + "/clips/" + filename);
-}
-
-void oscSend(PVector position) {
-  // TODO need to add another field to identify the user ...
-  // and one to identify which Kinect we're using
-  OscMessage msg = new OscMessage("/pos");
-  msg.add(position.x);
-  msg.add(position.y);
-  msg.add(position.z);
-  oscP5.send(msg, myRemoteLocation); 
 }
 
 void setup() {
@@ -76,7 +63,7 @@ void setup() {
   configMgr = new ConfigManager();
   configMgr.listClips();
   
-  silhouetteCache = new SilhouetteFrameCache();
+  silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
   
   clipMgr = new ClipManager(this);
   LinkedList<ClipInfo> clipInfoList = configMgr.getClips();
@@ -91,9 +78,9 @@ void setup() {
      return;  
   }
   
-  //start oscP5, listening for incoming messages at port 7000
-  oscP5 = new OscP5(this, oscServerPort, OscP5.UDP);
-  myRemoteLocation = new NetAddress(oscAdress, oscClientPort);
+  smooth = configMgr.getSmoothSilhouette(); // silhouette smoothing ration 
+  
+  oscManager = new OscManager(configMgr.getOscSettings());
 
   // enable depthMap generation 
   kinect.enableDepth();
@@ -151,7 +138,7 @@ void processCenterOfMass(boolean show)
         fill(255, 0, 0);
         ellipse(position.x, position.y, 25, 25);
       }
-      oscSend(position);
+      oscManager.send(position);
     }
   }
 }
@@ -276,6 +263,12 @@ void addSilhouette(SilhouetteFrame frame) {
   resultImage.updatePixels();
 }
 
+void smoothEdges() {
+  if(smooth > 0) {
+    resultImage.filter(BLUR, smooth);
+  }
+}
+
 void draw() {
   //try {
     kinect.update();
@@ -304,8 +297,7 @@ void draw() {
       SilhouetteFrame silhouette = getSilhouette(); // should return a frame
       addSilhouette(silhouette);
     
-      // smooth edges
-      resultImage.filter(BLUR, 1);
+      smoothEdges(); // smooth silhouette edges
 
       // dumpImage(resultImage, 1000);
 
