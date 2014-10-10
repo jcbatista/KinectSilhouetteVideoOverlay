@@ -34,15 +34,13 @@ class ClipManager
     this.add(clipInfo);
   }
   
-  void add(LinkedList<ClipInfo> clipInfolist)
-  {
+  void add(LinkedList<ClipInfo> clipInfolist) {
     for (ClipInfo clipInfo : clipInfolist) {  
       this.add(clipInfo, -1);
     }
   }
   
-  void add(ClipInfo clipInfo, int duration)
-  {
+  void add(ClipInfo clipInfo, int duration) {
     Clip clip = new Clip(clipInfo);
     clip.setDuration(duration);
     clips.add(clip);
@@ -78,6 +76,10 @@ class ClipManager
       }
     } 
     return currentClip;
+  }
+  
+  int getCurrentIndex() {
+    return currentClipIndex;
   }
   
   boolean isStarted() { return started; }

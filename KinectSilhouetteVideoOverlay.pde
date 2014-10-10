@@ -120,7 +120,7 @@ void convertPosTo720p(PVector position) {
   position.y = position.y * HEIGHT/ KINECT_HEIGHT;
 }
 
-void processCenterOfMass(boolean show)
+void processCenterOfMass()
 {
   kinect.getUsers(userList);
   long nbUsers = userList.size();
@@ -132,13 +132,14 @@ void processCenterOfMass(boolean show)
     kinect.convertRealWorldToProjective(position, position);
     
     if(!Float.isNaN(position.x)) {
-      convertPosTo720p(position);  
+      // convertPosTo720p(position);  
       //println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
-      if(show) {
+      if(configMgr.showCenterOfMass()) {
         fill(255, 0, 0);
         ellipse(position.x, position.y, 25, 25);
       }
-      oscManager.send(position);
+      
+      oscManager.send(clipMgr.getCurrentIndex(), i, position);
     }
   }
 }
@@ -308,7 +309,7 @@ void draw() {
       
       image(resultImage, 0, 0);
 
-      processCenterOfMass(false);
+      processCenterOfMass();
       
     } else {
       // get the Kinect color image

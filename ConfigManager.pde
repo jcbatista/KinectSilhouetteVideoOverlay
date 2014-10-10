@@ -43,6 +43,10 @@ class ConfigManager {
     return configJSON.getString("name");
   }
   
+  boolean showCenterOfMass() {
+    return configJSON.getBoolean("centerOfMass");
+  }
+  
   int getSmoothSilhouette() {
     return configJSON.getInt("smoothSilhouette");
   }
@@ -58,6 +62,7 @@ class ConfigManager {
   
   OscConfigData getOscSettings() {
     OscConfigData data = new OscConfigData();
+    data.name = getName();
     JSONObject dataJSON = configJSON.getJSONObject("osc");
     data.enabled = dataJSON.getBoolean("enabled");
     data.serverPort = dataJSON.getInt("serverPort");
