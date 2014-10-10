@@ -250,7 +250,7 @@ void addSilhouette(SilhouetteFrame frame) {
   if(frame==null) {
     // minimize this log message
     if(previousFrame!=null) {
-       println("warning. addSilhouette(): got a null frame, ignoring ...");
+       //println("warning. addSilhouette(): got a null frame, ignoring ...");
     }
     return;
   }
