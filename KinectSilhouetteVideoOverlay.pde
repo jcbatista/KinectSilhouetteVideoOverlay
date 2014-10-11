@@ -30,6 +30,8 @@ ClipManager clipMgr;
 ConfigManager configMgr;
 OscManager oscManager;
 SilhouetteFrameCache silhouetteCache;
+boolean shouldResizeSilhouette;
+SilhouettePadding silhouettePadding;
 
 boolean tracking = false; 
 int userID;
@@ -64,6 +66,8 @@ void setup() {
   configMgr.listClips();
   
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
+  shouldResizeSilhouette = configMgr.resizeSilhouette();
+  silhouettePadding = configMgr.getSilhouettePadding();
   
   clipMgr = new ClipManager(this);
   LinkedList<ClipInfo> clipInfoList = configMgr.getClips();
@@ -247,17 +251,12 @@ boolean overlayVideo() {
 }
 
 /*
- * remove weird padding from image
+ * remove weird padding from silhouette
  */
 PImage resizeSilhouette(PImage image) {
-  // TODO padding values should be part of the config.json
-  int paddingTop    = 35;
-  int paddingBottom = 15;
-  int paddingLeft   = 0;
-  int paddingRight  = 53;
-  int imageWidth = WIDTH - (paddingLeft + paddingRight);
-  int imageHeigth = HEIGHT - (paddingTop + paddingBottom);
-  image = image.get(paddingLeft, paddingTop, imageWidth, imageHeigth);
+  int imageWidth = WIDTH - (silhouettePadding.left + silhouettePadding.right);
+  int imageHeigth = HEIGHT - (silhouettePadding.top + silhouettePadding.bottom);
+  image = image.get(silhouettePadding.left, silhouettePadding.top, imageWidth, imageHeigth);
   image.resize(WIDTH, HEIGHT);
   return image;
 }
@@ -278,8 +277,9 @@ void addSilhouette(SilhouetteFrame frame) {
     }
   }
 
-  resultImage = resizeSilhouette(resultImage); 
-  
+  if(shouldResizeSilhouette) {
+    resultImage = resizeSilhouette(resultImage); 
+  }
   //  resultImage.updatePixels();
 }
 
@@ -308,7 +308,7 @@ void draw() {
       // TODO REMOVE START
       // instead initialize the image with zeros...
       for (int i=0; i < WIDTH * HEIGHT; i++) {
-         resultImage.pixels[i]=color(0,0,0);
+         resultImage.pixels[i] = color(0,0,0);
       }
       // TODO REMOVE END
       

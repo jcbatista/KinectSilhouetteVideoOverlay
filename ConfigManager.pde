@@ -43,6 +43,20 @@ class ConfigManager {
     return configJSON.getString("name");
   }
   
+  boolean resizeSilhouette() {
+    return configJSON.getBoolean("resizeSilouhette");
+  }
+  
+  SilhouettePadding getSilhouettePadding() {
+    SilhouettePadding padding = new SilhouettePadding();
+    JSONObject paddingJSON = configJSON.getJSONObject("silouettePadding");
+    padding.top = paddingJSON.getInt("top");
+    padding.right = paddingJSON.getInt("right");
+    padding.bottom = paddingJSON.getInt("bottom");
+    padding.left = paddingJSON.getInt("left");
+    return padding;
+  }
+  
   boolean showCenterOfMass() {
     return configJSON.getBoolean("centerOfMass");
   }
@@ -50,7 +64,7 @@ class ConfigManager {
   int getSmoothSilhouette() {
     return configJSON.getInt("smoothSilhouette");
   }
-  
+
   SilhouetteCacheData getSilhouetteCacheSettings() {
     SilhouetteCacheData data = new SilhouetteCacheData();
     JSONObject dataJSON = configJSON.getJSONObject("silhouetteCache");

@@ -1,5 +1,12 @@
 import java.util.BitSet;
 
+class SilhouettePadding {
+  int top = 0;
+  int right = 0;
+  int bottom = 0;
+  int left = 0;
+}
+
 class SilhouetteCacheData {
   boolean enabled = false;
   int minFrames = 240;
