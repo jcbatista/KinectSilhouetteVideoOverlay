@@ -47,6 +47,10 @@ class ConfigManager {
     return configJSON.getBoolean("resizeSilouhette");
   }
   
+  boolean overlayVideo() {
+    return configJSON.getBoolean("overlayVideo");
+  }
+  
   SilhouettePadding getSilhouettePadding() {
     SilhouettePadding padding = new SilhouettePadding();
     JSONObject paddingJSON = configJSON.getJSONObject("silouettePadding");

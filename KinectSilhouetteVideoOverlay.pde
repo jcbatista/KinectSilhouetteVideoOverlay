@@ -30,7 +30,8 @@ ClipManager clipMgr;
 ConfigManager configMgr;
 OscManager oscManager;
 SilhouetteFrameCache silhouetteCache;
-boolean shouldResizeSilhouette;
+boolean shouldResizeSilhouette = false;
+boolean shouldOverlayVideo = false;
 SilhouettePadding silhouettePadding;
 
 boolean tracking = false; 
@@ -66,6 +67,7 @@ void setup() {
   configMgr.listClips();
   
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
+  shouldOverlayVideo = configMgr.overlayVideo();
   shouldResizeSilhouette = configMgr.resizeSilhouette();
   silhouettePadding = configMgr.getSilhouettePadding();
   
@@ -293,7 +295,7 @@ void draw() {
   //try {
     kinect.update();
     if (tracking) {
-      if(!clipMgr.isStarted()) {
+      if(shouldOverlayVideo && !clipMgr.isStarted()) {
         clipMgr.start();
       }
       
@@ -322,7 +324,7 @@ void draw() {
       // dumpImage(resultImage, 1000);
 
       //  don't display an image if video overlay failed
-      if(!overlayVideo()){
+      if(shouldOverlayVideo && !overlayVideo()) {
          return; 
       }
       
