@@ -246,6 +246,22 @@ boolean overlayVideo() {
   return true;
 }
 
+/*
+ * remove weird padding from image
+ */
+PImage resizeSilhouette(PImage image) {
+  // TODO padding values should be part of the config.json
+  int paddingTop    = 35;
+  int paddingBottom = 15;
+  int paddingLeft   = 0;
+  int paddingRight  = 53;
+  int imageWidth = WIDTH - (paddingLeft + paddingRight);
+  int imageHeigth = HEIGHT - (paddingTop + paddingBottom);
+  image = image.get(paddingLeft, paddingTop, imageWidth, imageHeigth);
+  image.resize(WIDTH, HEIGHT);
+  return image;
+}
+
 void addSilhouette(SilhouetteFrame frame) {
   if(frame==null) {
     // minimize this log message
@@ -261,7 +277,10 @@ void addSilhouette(SilhouetteFrame frame) {
       resultImage.pixels[i] = color(0,0,255);       
     }
   }
-  resultImage.updatePixels();
+
+  resultImage = resizeSilhouette(resultImage); 
+  
+  //  resultImage.updatePixels();
 }
 
 void smoothEdges() {
