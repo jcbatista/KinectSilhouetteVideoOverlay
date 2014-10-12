@@ -33,6 +33,7 @@ OscManager oscManager;
 SilhouetteFrameCache silhouetteCache;
 boolean shouldResizeSilhouette = false;
 boolean shouldOverlayVideo = false;
+boolean shouldMirrorSilouette = false;
 SilhouettePadding silhouettePadding;
 
 boolean tracking = false; 
@@ -71,6 +72,7 @@ void setup() {
   actionMgr = new ActionManager(configMgr.getActionSettings());
   shouldOverlayVideo = configMgr.overlayVideo();
   shouldResizeSilhouette = configMgr.resizeSilhouette();
+  shouldMirrorSilouette = configMgr.mirrorSilhouette();
   silhouettePadding = configMgr.getSilhouettePadding();
   
   clipMgr = new ClipManager(this);
@@ -78,8 +80,10 @@ void setup() {
   clipMgr.add(clipInfoList);
   
   // TODO add support for multiple clips
-  actionClip = globalLoadMovie(actionMgr.clips.get(0)); // grab the fist action clip
-  actionClip.loop();
+  if(actionMgr.shouldPlay()) {
+    actionClip = globalLoadMovie(actionMgr.clips.get(0)); // grab the fist action clip
+    actionClip.loop();
+  }
   
   kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
   if(kinect.isInit() == false) {  
@@ -298,10 +302,33 @@ PImage convertSilhouette(SilhouetteFrame frame) {
 }
 
 void addSilhouette(PImage silhouette) {
-  for (int i=0; i < silhouette.pixels.length; i++) {
-    int maskedColor = silhouette.pixels[i] & 0xffffff;
-    if (maskedColor > 0) {
-      resultImage.pixels[i] = silhouette.pixels[i];       
+  int maskedColor = 0;
+  if(shouldMirrorSilouette) {
+    // perform an horizontal flip of the silhouette
+    int pivot = WIDTH / 2;
+    int i=0, j=0;
+    for(int y=0; y<HEIGHT; y++) {
+      for(int x=0; x<pivot; x++) {
+        i = y*WIDTH + x;
+        j = y*WIDTH + (WIDTH - 1 - x);
+        // handle leftmost pixel
+        maskedColor = silhouette.pixels[i] & 0xffffff;
+        if (maskedColor > 0) {
+          resultImage.pixels[j] = silhouette.pixels[i];       
+        }
+        // handle rigthmost pixel
+        maskedColor = silhouette.pixels[j] & 0xffffff;
+        if (maskedColor > 0) {
+          resultImage.pixels[i] = silhouette.pixels[j];       
+        }
+      }
+    }
+  } else {
+    for (int i=0; i < silhouette.pixels.length; i++) {
+      maskedColor = silhouette.pixels[i] & 0xffffff;
+      if (maskedColor > 0) {
+        resultImage.pixels[i] = silhouette.pixels[i];       
+      }
     }
   }
 }
@@ -328,7 +355,7 @@ void draw() {
            resultImage.pixels[i] = color(0,0,0);
         }
       }
-             
+                   
       SilhouetteFrame silhouetteFrame = getSilhouette(); // should return a frame
       PImage silhouette = convertSilhouette(silhouetteFrame);
       if(silhouette!=null) {

@@ -47,6 +47,10 @@ class ConfigManager {
     return configJSON.getBoolean("resizeSilouhette");
   }
   
+  boolean mirrorSilhouette() {
+    return configJSON.getBoolean("mirrorSilouette");
+  }
+  
   boolean overlayVideo() {
     return configJSON.getBoolean("overlayVideo");
   }
