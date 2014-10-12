@@ -51,6 +51,10 @@ class ConfigManager {
     return configJSON.getBoolean("overlayVideo");
   }
   
+  boolean useActionClips() {
+    return configJSON.getBoolean("useActionClips");
+  }
+  
   SilhouettePadding getSilhouettePadding() {
     SilhouettePadding padding = new SilhouettePadding();
     JSONObject paddingJSON = configJSON.getJSONObject("silouettePadding");
@@ -89,17 +93,18 @@ class ConfigManager {
     return data;
   }
   
-  StringList getActionClips() {
-    StringList list = new StringList();
-    JSONArray clips = configJSON.getJSONArray("actionClips");
+  ActionSettings getActionSettings() {
+    ActionSettings settings = new ActionSettings();
+    JSONObject actionData = configJSON.getJSONObject("actions");
+    settings.frequency = actionData.getInt("frequency");
+    JSONArray clips = actionData.getJSONArray("clips");
     for(int i=0; i < clips.size(); i++) {
       String clipName = clips.getString(i);
-      list.append(clipName);
+      settings.clips.append(clipName);
     }
-    return list;
+    return settings;
   }
  
-  
   void listClips() {
     println("*** Listing defined clips ***");
     LinkedList<ClipInfo> clips = getClips();

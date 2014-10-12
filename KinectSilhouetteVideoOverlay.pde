@@ -28,6 +28,7 @@ import netP5.*;
 SimpleOpenNI kinect;
 ClipManager clipMgr; 
 ConfigManager configMgr;
+ActionManager actionMgr;
 OscManager oscManager;
 SilhouetteFrameCache silhouetteCache;
 boolean shouldResizeSilhouette = false;
@@ -67,6 +68,7 @@ void setup() {
   configMgr.listClips();
   
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
+  actionMgr = new ActionManager(configMgr.getActionSettings());
   shouldOverlayVideo = configMgr.overlayVideo();
   shouldResizeSilhouette = configMgr.resizeSilhouette();
   silhouettePadding = configMgr.getSilhouettePadding();
@@ -74,7 +76,9 @@ void setup() {
   clipMgr = new ClipManager(this);
   LinkedList<ClipInfo> clipInfoList = configMgr.getClips();
   clipMgr.add(clipInfoList);
-  actionClip = globalLoadMovie(configMgr.getActionClips().get(0)); // grab the fist action clip: TODO add support for multiple clips
+  
+  // TODO add support for multiple clips
+  actionClip = globalLoadMovie(actionMgr.clips.get(0)); // grab the fist action clip
   actionClip.loop();
   
   kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
@@ -316,19 +320,14 @@ void draw() {
       //create a buffer image to work with instead of using sketch pixels
       resultImage = new PImage(WIDTH, HEIGHT, RGB); 
        
-      // TODO: we should be able to disable action clips   
-      addActionClip(actionClip);  
-      
-      // TODO REMOVE START
-      // instead initialize the image with zeros... Note: we'll want to keep this if action clips are disabled
-      /*
-      for (int i=0; i < WIDTH * HEIGHT; i++) {
-         resultImage.pixels[i] = color(0,0,0);
+      if(actionMgr.shouldPlay()) {  
+        addActionClip(actionClip);  
+      } else {
+        // initialize the result image
+        for (int i=0; i < WIDTH * HEIGHT; i++) {
+           resultImage.pixels[i] = color(0,0,0);
+        }
       }
-      */
-      // TODO REMOVE END
-      
-      resultImage.updatePixels();
              
       SilhouetteFrame silhouetteFrame = getSilhouette(); // should return a frame
       PImage silhouette = convertSilhouette(silhouetteFrame);
