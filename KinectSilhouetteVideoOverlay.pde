@@ -263,31 +263,42 @@ PImage resizeSilhouette(PImage image) {
   return image;
 }
 
-void addSilhouette(SilhouetteFrame frame) {
+void smoothEdges(PImage image) {
+  if(smooth > 0) {
+    image.filter(BLUR, smooth);
+  }
+}
+
+/*
+ * convert the silhouette to an image
+ */
+PImage convertSilhouette(SilhouetteFrame frame) {
   if(frame==null) {
     // minimize this log message
     if(previousFrame!=null) {
-       //println("warning. addSilhouette(): got a null frame, ignoring ...");
+       //println("warning. convertSilhouette(): got a null frame, ignoring ...");
     }
-    return;
+    return null;
   }
   previousFrame = frame;
-  // TODO: we shouldn't be doing this extra copy
+  PImage image = new PImage(WIDTH, HEIGHT, RGB); 
   for (int i=0; i < frame.size(); i++) {
     if (frame.get(i)) {
-      resultImage.pixels[i] = color(0,0,255);       
+      image.pixels[i] = color(0,0,255);       
+    } else {
+      image.pixels[i] = color(0,0,0); 
     }
   }
-
-  if(shouldResizeSilhouette) {
-    resultImage = resizeSilhouette(resultImage); 
-  }
-  //  resultImage.updatePixels();
+  image.updatePixels();
+  return image;  
 }
 
-void smoothEdges() {
-  if(smooth > 0) {
-    resultImage.filter(BLUR, smooth);
+void addSilhouette(PImage silhouette) {
+  for (int i=0; i < silhouette.pixels.length; i++) {
+    int maskedColor = silhouette.pixels[i] & 0xffffff;
+    if (maskedColor > 0) {
+      resultImage.pixels[i] = silhouette.pixels[i];       
+    }
   }
 }
 
@@ -304,23 +315,34 @@ void draw() {
      
       //create a buffer image to work with instead of using sketch pixels
       resultImage = new PImage(WIDTH, HEIGHT, RGB); 
-          
-      // TODO: action clips need to be 640x480 ...
-      //addActionClip(actionClip);  
+       
+      // TODO: we should be able to disable action clips   
+      addActionClip(actionClip);  
+      
       // TODO REMOVE START
-      // instead initialize the image with zeros...
+      // instead initialize the image with zeros... Note: we'll want to keep this if action clips are disabled
+      /*
       for (int i=0; i < WIDTH * HEIGHT; i++) {
          resultImage.pixels[i] = color(0,0,0);
       }
+      */
       // TODO REMOVE END
       
       resultImage.updatePixels();
              
-      SilhouetteFrame silhouette = getSilhouette(); // should return a frame
-      addSilhouette(silhouette);
-    
-      smoothEdges(); // smooth silhouette edges
+      SilhouetteFrame silhouetteFrame = getSilhouette(); // should return a frame
+      PImage silhouette = convertSilhouette(silhouetteFrame);
+      if(silhouette!=null) {
+        if(shouldResizeSilhouette) {
+          silhouette = resizeSilhouette(silhouette); 
+        }
 
+        silhouette.updatePixels();
+        addSilhouette(silhouette);
+      }
+      
+      smoothEdges(resultImage); 
+              
       // dumpImage(resultImage, 1000);
 
       //  don't display an image if video overlay failed
@@ -328,6 +350,7 @@ void draw() {
          return; 
       }
       
+      resultImage.updatePixels();
       image(resultImage, 0, 0);
 
       processCenterOfMass();
