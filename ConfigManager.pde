@@ -116,7 +116,7 @@ class ConfigManager {
     for (ClipInfo clip : clips) {
       print(count + ".");
       if(clip.silhouetteFilename!=null) {
-        print ("silhouette clip ="+ clip.silhouetteFilename + " ");
+        print ("silhouette clip = "+ clip.silhouetteFilename + " ");
       }
       if(clip.backgroundFilename!=null) {
         print ("backgroundFilename clip = "+ clip.backgroundFilename);

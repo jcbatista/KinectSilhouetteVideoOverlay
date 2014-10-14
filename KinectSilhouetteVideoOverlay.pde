@@ -5,7 +5,6 @@ import processing.video.*;
 import processing.opengl.*; 
 import SimpleOpenNI.*;
 
-
 import netP5.*;
 
 /*
@@ -79,11 +78,13 @@ void setup() {
   LinkedList<ClipInfo> clipInfoList = configMgr.getClips();
   clipMgr.add(clipInfoList);
   
-  // TODO add support for multiple clips
+  // TODO REMOVE
+  /*
   if(actionMgr.shouldPlay()) {
     actionClip = globalLoadMovie(actionMgr.clips.get(0)); // grab the fist action clip
     actionClip.loop();
   }
+  */
   
   kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
   if(kinect.isInit() == false) {  
@@ -348,7 +349,8 @@ void draw() {
       resultImage = new PImage(WIDTH, HEIGHT, RGB); 
        
       if(actionMgr.shouldPlay()) {  
-        addActionClip(actionClip);  
+        // TODO
+        //addActionClip(actionClip);  
       } else {
         // initialize the result image
         for (int i=0; i < WIDTH * HEIGHT; i++) {
