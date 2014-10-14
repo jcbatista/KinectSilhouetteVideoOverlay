@@ -61,7 +61,7 @@ class ConfigManager {
   
   SilhouettePadding getSilhouettePadding() {
     SilhouettePadding padding = new SilhouettePadding();
-    JSONObject paddingJSON = configJSON.getJSONObject("silouettePadding");
+    JSONObject paddingJSON = configJSON.getJSONObject("silhouettePadding");
     padding.top = paddingJSON.getInt("top");
     padding.right = paddingJSON.getInt("right");
     padding.bottom = paddingJSON.getInt("bottom");
