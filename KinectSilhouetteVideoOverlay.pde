@@ -49,8 +49,6 @@ int KINECT_HEIGHT = 480;
 int WIDTH  = 640;  // WIDTH = 1280;
 int HEIGHT = 480;  // HEIGHT = 720;
 
-Movie actionClip;
-
 NetAddress myRemoteLocation;
 
 IntVector userList;
@@ -77,14 +75,6 @@ void setup() {
   clipMgr = new ClipManager(this);
   LinkedList<ClipInfo> clipInfoList = configMgr.getClips();
   clipMgr.add(clipInfoList);
-  
-  // TODO REMOVE
-  /*
-  if(actionMgr.shouldPlay()) {
-    actionClip = globalLoadMovie(actionMgr.clips.get(0)); // grab the fist action clip
-    actionClip.loop();
-  }
-  */
   
   kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
   if(kinect.isInit() == false) {  
@@ -203,12 +193,12 @@ SilhouetteFrame getSilhouette() {
   return frame;
 }
 
-void addActionClip(Movie clip) {
-  for (int i=0; i < clip.pixels.length; i++) {
-     int maskedColor = clip.pixels[i] & colorMask;
+void addActionClip(Clip clip) {
+  for (int i=0; i < clip.movie.pixels.length; i++) {
+     int maskedColor = clip.movie.pixels[i] & colorMask;
      if (maskedColor != 0) {
-       float saturation = saturation(clip.pixels[i]);
-       float brightness = brightness(clip.pixels[i]); 
+       float saturation = saturation(clip.movie.pixels[i]);
+       float brightness = brightness(clip.movie.pixels[i]); 
        if(saturation>30 && brightness>100) { 
          resultImage.pixels[i] = color(0,0,255); //maskedColor;
        }
@@ -348,9 +338,8 @@ void draw() {
       //create a buffer image to work with instead of using sketch pixels
       resultImage = new PImage(WIDTH, HEIGHT, RGB); 
        
-      if(actionMgr.shouldPlay()) {  
-        // TODO
-        //addActionClip(actionClip);  
+      if(actionMgr.shouldPlay()) {
+        addActionClip(actionMgr.getCurrent());  
       } else {
         // initialize the result image
         for (int i=0; i < WIDTH * HEIGHT; i++) {

@@ -37,6 +37,9 @@ class ActionManager {
       Clip clip = new Clip(clipInfo);
       clips.add(clip);
     }
+    
+    // TODO REMOVE THIS
+    clips.get(0).movie.loop();
   }
   
   void listActionClips() {
@@ -72,6 +75,11 @@ class ActionManager {
       // TODO IMPLEMENT SCHEDULING HERE ...
     }
   }
+  
+  Clip getCurrent() {
+    return clips.get(0);
+  }
+  
   
   private int currentTime = 0;
   private int previousTime = 0;

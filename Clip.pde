@@ -9,6 +9,7 @@ class Clip {
     this.clipInfo = clipInfo;
     this.silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
     this.backgroundMovie = loadMovie(clipInfo.backgroundFilename);
+    this.movie = silhouetteMovie != null ? silhouetteMovie: backgroundMovie;
     duration = -1;
     startTime = 0;
   }
@@ -60,7 +61,6 @@ class Clip {
  }
  
   void start() {
-    // movie.loop();
     if(hasSilhouette()) {
       silhouetteMovie.play();
       silhouetteMovie.volume(0);
@@ -71,7 +71,6 @@ class Clip {
       backgroundMovie.volume(0);
     }
     
-    Movie movie = silhouetteMovie != null ? silhouetteMovie: backgroundMovie;
     duration = (int) movie.duration();
     startTime = System.nanoTime();
   }
@@ -91,5 +90,6 @@ class Clip {
   ClipInfo clipInfo;
   Movie silhouetteMovie; // can be null
   Movie backgroundMovie;
+  Movie movie;
 }
 
