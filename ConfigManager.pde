@@ -100,11 +100,16 @@ class ConfigManager {
   ActionSettings getActionSettings() {
     ActionSettings settings = new ActionSettings();
     JSONObject actionData = configJSON.getJSONObject("actions");
+
     settings.frequency = actionData.getInt("frequency");
     JSONArray clips = actionData.getJSONArray("clips");
+    
     for(int i=0; i < clips.size(); i++) {
-      String clipName = clips.getString(i);
+      JSONArray clipTuple = clips.getJSONArray(i);
+      String clipName = clipTuple.getString(0); 
+      int duration = clipTuple.getInt(1);
       settings.clips.append(clipName);
+      settings.durations.append(duration);
     }
     return settings;
   }
@@ -115,10 +120,10 @@ class ConfigManager {
     int count = 1;
     for (ClipInfo clip : clips) {
       print(count + ".");
-      if(clip.silhouetteFilename!=null) {
+      if(clip.silhouetteFilename!=null && clip.silhouetteFilename!="") {
         print ("silhouette clip = "+ clip.silhouetteFilename + " ");
       }
-      if(clip.backgroundFilename!=null) {
+      if(clip.backgroundFilename!=null && clip.backgroundFilename!="") {
         print ("backgroundFilename clip = "+ clip.backgroundFilename);
       }
       count++;

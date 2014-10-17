@@ -1,10 +1,11 @@
-class ActionSettings
-{
+class ActionSettings {
   // TODO actions need to send OSC information
   ActionSettings() {
     clips = new StringList();
+    durations = new IntList(); // note: clips and durations index must match
   }
   StringList clips;
+  IntList durations;
   int frequency;
 }
 
@@ -17,7 +18,7 @@ class ActionManager {
     reset();
     
     if(shouldPlay()) {
-      initClips(settings.clips);
+      initClips(settings);
       listActionClips();
     }
     
@@ -29,12 +30,13 @@ class ActionManager {
      previousTime = 0;
   }
   
-  void initClips(StringList clipFiles) {
+  void initClips(ActionSettings settings) {
     clips = new LinkedList<Clip>();
-    for (String clipFile : clipFiles) {
+    for (int i=0; i < settings.clips.size(); i++) { 
       ClipInfo clipInfo = new ClipInfo();
-      clipInfo.backgroundFilename = clipFile;
+      clipInfo.backgroundFilename = settings.clips.get(i);
       Clip clip = new Clip(clipInfo);
+      clip.duration = settings.durations.get(i); 
       clips.add(clip);
     }
     
@@ -48,7 +50,7 @@ class ActionManager {
     for (Clip clip : clips) {
       print(count + ".");
       if(clip.clipInfo.backgroundFilename!=null) {
-        println("action clip = "+ clip.clipInfo.backgroundFilename + " ");
+        println("action clip = "+ clip.clipInfo.backgroundFilename + " duration:" + clip.duration);
       }
       count++;
     }
