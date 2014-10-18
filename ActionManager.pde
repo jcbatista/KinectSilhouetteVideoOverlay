@@ -1,4 +1,4 @@
-class ActionSettings {
+class ActionSettings { 
   // TODO actions need to send OSC information
   ActionSettings() {
     clips = new StringList();
@@ -9,29 +9,56 @@ class ActionSettings {
   int frequency;
 }
 
+public class IntPair { 
+   int first; 
+   int second; 
+   IntPair(int fisrt, int second) { 
+   this.first = first; 
+   this.second = second; 
+  } 
+} 
+
 class ActionManager {
   
   ActionManager(ActionSettings settings) {
+    clips = new LinkedList<Clip>();
+    scheduledClips = new LinkedList<IntPair>();
     frequency = settings.frequency;
-    runLengthPeriod = 60 * 60; // one hour (in seconds)
+    runLengthPeriod = 10 * 60; // 10 minutes //60 * 60; // one hour (in seconds)
     period = runLengthPeriod / frequency;
-    reset();
-    
     if(shouldPlay()) {
       initClips(settings);
       listActionClips();
     }
-    
+    reset();
   }
  
   void reset() {
      runStartTime = System.nanoTime();
      currentTime = 0;
      previousTime = 0;
+     schedule();
   }
   
+  void schedule() {
+   int periodTimeStart = 0;
+   int periodTimeEnd = 0;
+   int clipTimeStart = 0;
+   int clipIndex = 0;
+   for(int i=0; i<frequency; i++) {
+     clipIndex  =  int(random(0, clips.size())); // get a random action clip
+     Clip clip = clips.get(clipIndex);
+     periodTimeStart = i*period;
+     periodTimeEnd = i*period + period;
+     clipTimeStart = int(random(periodTimeStart, periodTimeEnd - clip.duration));
+     println( "action clip index: " + clipIndex + ". scheduled to start in " + clipTimeStart + " seconds ...");
+     scheduledClips.add(new IntPair(clipIndex, clipTimeStart));
+   }
+ }
+  
+  
   void initClips(ActionSettings settings) {
-    clips = new LinkedList<Clip>();
+
     for (int i=0; i < settings.clips.size(); i++) { 
       ClipInfo clipInfo = new ClipInfo();
       clipInfo.backgroundFilename = settings.clips.get(i);
@@ -50,7 +77,7 @@ class ActionManager {
     for (Clip clip : clips) {
       print(count + ".");
       if(clip.clipInfo.backgroundFilename!=null) {
-        println("action clip = "+ clip.clipInfo.backgroundFilename + " duration:" + clip.duration);
+        println("action clip = "+ clip.clipInfo.backgroundFilename + " duration: " + clip.duration);
       }
       count++;
     }
@@ -75,13 +102,19 @@ class ActionManager {
       previousTime = currentTime;
       // time changed!
       // TODO IMPLEMENT SCHEDULING HERE ...
+      if(currentTime > runLengthPeriod) {
+        reset();
+      } 
+      // TODO
     }
   }
   
   Clip getCurrent() {
+    // TODO...
     return clips.get(0);
   }
   
+  private LinkedList<IntPair> scheduledClips; // list of <clipIndex, start time (in seconds)> for a given run length
   
   private int currentTime = 0;
   private int previousTime = 0;
