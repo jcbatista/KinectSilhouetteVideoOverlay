@@ -26,12 +26,13 @@ class OscManager {
     // TODO implement
   }
   
-  void send(int clipIndex, int userIndex, PVector position) {
+  void send(int clipIndex, int totalUsers, int userIndex, PVector position) {
     if(!enabled)
       return;
     
     OscMessage msg = new OscMessage("/" + name);
     msg.add(clipIndex);
+    msg.add(totalUsers);
     msg.add(userIndex);
     msg.add(position.x);
     msg.add(position.y);

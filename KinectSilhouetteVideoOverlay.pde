@@ -129,7 +129,7 @@ void convertPosTo720p(PVector position) {
 void processCenterOfMass()
 {
   kinect.getUsers(userList);
-  long nbUsers = userList.size();
+  int nbUsers = int(userList.size());
 
   for(int i=0; i<nbUsers; i++) {
     int userId = userList.get(i);
@@ -145,7 +145,7 @@ void processCenterOfMass()
         ellipse(position.x, position.y, 25, 25);
       }
       
-      oscManager.send(clipMgr.getCurrentIndex(), i, position);
+      oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position);
     }
   }
 }
@@ -341,6 +341,7 @@ void draw() {
     kinect.update();
     if (tracking) {
       if(shouldOverlayVideo && !clipMgr.isStarted()) {
+        // TODO: need to send OSC message when clip starts / ends
         clipMgr.start();
       }
       
