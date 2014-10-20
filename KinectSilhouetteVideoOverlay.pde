@@ -102,6 +102,7 @@ void setup() {
 
   userList = new IntVector();
   //openCV = new OpenCV(this, KINECT_WIDTH, KINECT_HEIGHT);
+  font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on
 }
 
 // TODO refactor this
@@ -166,7 +167,7 @@ SilhouetteFrame getSilhouette() {
   if(userMap.length > 0 && userCount > 0) {
        
     if(usingFrameCache) {
-      println("Starting using Kinect user map frames ...");
+      println("starting using Kinect user map frames ...");
       usingFrameCache = false;
     } 
     
@@ -194,6 +195,8 @@ SilhouetteFrame getSilhouette() {
 }
 
 void addActionClip(Clip clip) {
+  if(clip==null)
+    return;
   for (int i=0; i < clip.movie.pixels.length; i++) {
      int maskedColor = clip.movie.pixels[i] & colorMask;
      if (maskedColor != 0) {
@@ -324,6 +327,15 @@ void addSilhouette(PImage silhouette) {
   }
 }
 
+void drawElapsedTime() {
+  if(!configMgr.showTime()) {
+    return;
+  }
+  textFont(font, 36);                
+  fill(color(255,0,0));
+  text("Elapsed: " + str(actionMgr.getElapseTime()), 10, 35);  
+}
+
 void draw() {
   //try {
     kinect.update();
@@ -372,6 +384,8 @@ void draw() {
 
       processCenterOfMass();
       
+      drawElapsedTime();
+      
     } else {
       // get the Kinect color image
       PImage rgbImage = kinect.rgbImage();
@@ -416,5 +430,6 @@ void oscEvent(OscMessage theOscMessage) {
   */
 }
 
+private PFont font;
 private SilhouetteFrame previousFrame = null;
 private boolean usingFrameCache = true;

@@ -73,6 +73,10 @@ class ConfigManager {
     return configJSON.getBoolean("centerOfMass");
   }
   
+  boolean showTime() {
+    return configJSON.getBoolean("showTime");
+  }
+  
   int getSmoothSilhouette() {
     return configJSON.getInt("smoothSilhouette");
   }
@@ -107,7 +111,7 @@ class ConfigManager {
     for(int i=0; i < clips.size(); i++) {
       JSONArray clipTuple = clips.getJSONArray(i);
       String clipName = clipTuple.getString(0); 
-      int duration = clipTuple.getInt(1);
+      int duration = clipTuple.getInt(1);  
       settings.clips.append(clipName);
       settings.durations.append(duration);
     }

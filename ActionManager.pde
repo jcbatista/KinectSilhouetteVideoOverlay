@@ -2,7 +2,7 @@ class ActionSettings {
   // TODO actions need to send OSC information
   ActionSettings() {
     clips = new StringList();
-    durations = new IntList(); // note: clips and durations index must match
+    durations = new IntList(); // Note: clips and durations index must match
   }
   StringList clips;
   IntList durations;
@@ -37,6 +37,7 @@ class ActionManager {
      runStartTime = System.nanoTime();
      currentTime = 0;
      previousTime = 0;
+     currentClip = null;
      schedule();
   }
   
@@ -56,7 +57,6 @@ class ActionManager {
    }
  }
   
-  
   void initClips(ActionSettings settings) {
 
     for (int i=0; i < settings.clips.size(); i++) { 
@@ -68,7 +68,7 @@ class ActionManager {
     }
     
     // TODO REMOVE THIS
-    clips.get(0).movie.loop();
+    //clips.get(0).movie.loop();
   }
   
   void listActionClips() {
@@ -94,28 +94,50 @@ class ActionManager {
     return (int)seconds;
   }
   
-  void tick()
+  int getClipToStart() {
+    int clipIndex = -1; // index of the clip to start
+    // clips are store in a {clip index, time to start} pair
+    for(IntPair clipPair: scheduledClips) {
+      if(clipPair.second == currentTime) {
+        clipIndex = clipPair.first;
+        break;
+      }
+    }
+    return clipIndex;
+  }
+  
+  private void handleTimeChanges()
   {
-    // if shouldPlay() ...
     currentTime = getEllapsedTime();
     if(currentTime != previousTime) {
       previousTime = currentTime;
-      // time changed!
-      // TODO IMPLEMENT SCHEDULING HERE ...
+
       if(currentTime > runLengthPeriod) {
         reset();
       } 
-      // TODO
+      
+      int clipIndexToStart = getClipToStart();
+      if(clipIndexToStart != -1) {
+        currentClip = clips.get(clipIndexToStart);
+        println("starting action clip index: " + clipIndexToStart);
+        currentClip.start();
+      }
     }
   }
   
+  int getElapseTime() {
+    return currentTime;
+  }
+  
   Clip getCurrent() {
-    // TODO...
-    return clips.get(0);
+    handleTimeChanges();
+    return currentClip!=null && !currentClip.hasCompleted() ? currentClip: null;
+    //return clips.get(0);
   }
   
   private LinkedList<IntPair> scheduledClips; // list of <clipIndex, start time (in seconds)> for a given run length
-  
+ 
+  private Clip currentClip = null;
   private int currentTime = 0;
   private int previousTime = 0;
   
