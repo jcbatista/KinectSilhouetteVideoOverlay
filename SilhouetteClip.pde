@@ -19,16 +19,16 @@ class SilhouetteClip extends Clip {
     // set a default movie / filename
     if(silhouetteMovie != null) {
       movie = silhouetteMovie;
-      filename =  clipInfo.silhouetteFilename;
+      filename =clipInfo.silhouetteFilename;
     } else {
       movie = backgroundMovie;
-      filename =  clipInfo.backgroundFilename;      
+      filename = clipInfo.backgroundFilename;      
     }
     
-    duration = -1;
+    duration = -1;  
     startTime = 0;
   }
-  
+    
   boolean hasSilhouette() {
     return silhouetteMovie != null;
   }
@@ -62,10 +62,8 @@ class SilhouetteClip extends Clip {
     startTime = 0;
   }
   
-  int duration; // in seconds or -1 if not set
-  long startTime; // start time in nanoseconds
-  SilhouetteClipInfo clipInfo;
-  Movie silhouetteMovie; // can be null
-  Movie backgroundMovie;
+  private SilhouetteClipInfo clipInfo;
+  private Movie silhouetteMovie; // can be null
+  private Movie backgroundMovie;
 }
 

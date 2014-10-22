@@ -17,16 +17,6 @@ class Clip {
     startTime = 0;
   }
   
-  
-  Movie loadMovie(String filename) {
-    if(filename==null || filename=="") {
-      return null;
-    }  
-    Movie movie = globalLoadMovie(filename);
-    movie.pause();
-    return movie; 
-  }
-
   void setDuration(int duration) {
     this.duration = duration;
   }
@@ -49,9 +39,8 @@ class Clip {
  }
  
   void start() {
-
-      movie.play();
-      movie.volume(0);
+    movie.play();
+    movie.volume(0);
     
     duration = (int) movie.duration();
     startTime = System.nanoTime();
@@ -65,10 +54,23 @@ class Clip {
   String getFilename() {
     return filename;
   }
+ 
+  Movie getMovie() {
+    return movie;
+  }
   
+  protected Movie loadMovie(String filename) {
+    if(filename==null || filename=="") {
+      return null;
+    }  
+    Movie movie = globalLoadMovie(filename);
+    movie.pause();
+    return movie; 
+  }
+ 
   protected String filename;
-  protected int duration; // in seconds or -1 if not set
+  protected int duration;   // in seconds or -1 if not set
   protected long startTime; // start time in nanoseconds
-  public Movie movie;
+  protected Movie movie;
 }
 

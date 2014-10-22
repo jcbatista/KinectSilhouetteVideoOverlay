@@ -58,7 +58,7 @@ class ActionClipManager {
  }
   
   void initClips(ActionClipSettings settings) {
-    for (int i=0; i < settings.clips.size(); i++) { 
+    for (int i=0; i < settings.clips.size(); i++) {
       String filename = settings.clips.get(i);
       Clip clip = new Clip(filename);
       clip.duration = settings.durations.get(i); 

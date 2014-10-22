@@ -47,6 +47,7 @@ class SilhouetteClipManager
   
   SilhouetteClip getCurrent() {
     if(currentClip.hasCompleted()) {
+      
       int size = clips.size();
       if(size > 0) {
         currentClip.stop(); // make sure the current clip is actually stopped
