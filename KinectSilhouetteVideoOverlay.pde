@@ -10,7 +10,7 @@ import netP5.*;
  *   Concept for an interactive art installation project where people in the scene are used as a canvas 
  *   on which video imagery gets overlayed in realtime.
  * 
- *   @Authors: Jean-Claude Batista             
+ *   @Authors: Jean-Claude Batista
  *
  *   Based on Greg's Book Making things see. Also based on the Comperas source tree
  *      https://github.com/ITPNYU/Comperas/tree/master/KinectBackgroundRemoval
@@ -31,29 +31,29 @@ final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
 
 void setup() {
+  
   size(WIDTH, HEIGHT); 
-  configMgr = new ConfigManager();  
-  font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on
   
+  initComponents();
+  initConfigSettings();
   initKinect();
-   
-  initComponents(); 
-  
-  smooth = configMgr.getSmoothSilhouette(); // silhouette smoothing ratio
-  
+    
+  // init silhouette related videos  
   LinkedList<SilhouetteClipInfo> clipList = configMgr.getClips();
   clipMgr.add(clipList); 
   
   // display all the clips available for playback
   configMgr.listClips();
+  
+  // misc stuff
+  font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on
 }
 
 void initKinect() {
   kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
   if(kinect.isInit() == false) {  
      println("Can't init SimpleOpenNI, maybe the camera is not connected!"); 
-     exit();
-     return;  
+     exit(); 
   } 
 
   // enable depthMap generation 
@@ -74,62 +74,52 @@ void initKinect() {
 }
 
 void initComponents() {
+  configMgr = new ConfigManager();  
   oscManager = new OscManager(configMgr.getOscSettings());
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
-  actionMgr = new ActionClipManager(configMgr.getActionClipSettings());
+  actionMgr = new ActionClipManager(configMgr.getActionClipSettings());  
+  clipMgr = new SilhouetteClipManager(this);
+}
+
+void initConfigSettings() {
   shouldOverlayVideo = configMgr.overlayVideo();
   shouldResizeSilhouette = configMgr.resizeSilhouette();
   shouldMirrorSilouette = configMgr.mirrorSilhouette();
   silhouettePadding = configMgr.getSilhouettePadding();
-  clipMgr = new SilhouetteClipManager(this);
+  smooth = configMgr.getSmoothSilhouette(); // silhouette smoothing ratio
 }
 
 void draw() {    
     kinect.update();
     if (tracking) {
       if(shouldOverlayVideo && !clipMgr.isStarted()) {
-        // TODO: need to send OSC message when clip starts / ends
         clipMgr.start();
       }
       
       loadPixels();
      
-      //create a buffer image to work with instead of using sketch pixels
+      // create a buffer image that will contain the rendered content
       resultImage = new PImage(WIDTH, HEIGHT, RGB); 
-       
+              
       if(actionMgr.shouldPlay()) {
         addActionClip(actionMgr.getCurrent());  
       } else {
-        // initialize the result image
-        for (int i=0; i < WIDTH * HEIGHT; i++) {
-           resultImage.pixels[i] = color(0,0,0);
-        }
+        initResultImage();
       }
-                   
-      SilhouetteFrame silhouetteFrame = getSilhouette(); // should return a frame
-      PImage silhouette = convertSilhouette(silhouetteFrame);
-      if(silhouette!=null) {
-        if(shouldResizeSilhouette) {
-          silhouette = resizeSilhouette(silhouette); 
-        }
-
-        silhouette.updatePixels();
-        addSilhouette(silhouette);
-      }
-      
-      smoothEdges(resultImage); 
+                                      
+      processSilhouette();
               
       //  don't display an image if video overlay failed
       if(shouldOverlayVideo && !overlayVideo()) {
          return; 
       }
       
+      // display rendered image
       resultImage.updatePixels();
       image(resultImage, 0, 0);
 
-      processCenterOfMass();
-      
-      drawElapsedTime();
+      processCenterOfMass();      
+      drawElapsedTime();    
       
     } else {
       // get the Kinect color image
@@ -138,10 +128,18 @@ void draw() {
     }
 }
 
-// TODO: REMOVE DEPRECATED
-void convertPosTo720p(PVector position) {
-  position.x = position.x * WIDTH / KINECT_WIDTH;
-  position.y = position.y * HEIGHT/ KINECT_HEIGHT;
+void processSilhouette() {
+  SilhouetteFrame silhouetteFrame = getSilhouette();
+  PImage silhouette = convertSilhouette(silhouetteFrame);
+  if(silhouette!=null) {
+    if(shouldResizeSilhouette) {
+      silhouette = resizeSilhouette(silhouette); 
+    }  
+    silhouette.updatePixels();
+    addSilhouette(silhouette);
+  }
+  
+  smoothEdges(resultImage); 
 }
 
 void processCenterOfMass()
@@ -156,8 +154,7 @@ void processCenterOfMass()
     kinect.convertRealWorldToProjective(position, position);
     
     if(!Float.isNaN(position.x)) {
-      // convertPosTo720p(position);  
-      //println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
+      // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
       if(configMgr.showCenterOfMass()) {
         fill(255, 0, 0);
         ellipse(position.x, position.y, 25, 25);
@@ -168,6 +165,10 @@ void processCenterOfMass()
   }
 }
 
+
+/*
+ * retrieves a silhouette frame ( a bitset where all the pixel that represent the silhouette are set to true )
+ */
 SilhouetteFrame getSilhouette() { 
   SilhouetteFrame frame =  null;
   userMap = kinect.userMap();
@@ -190,7 +191,6 @@ SilhouetteFrame getSilhouette() {
     
     frame = new SilhouetteFrame();
     for (int i = 0; i < userMap.length; i++) {
-      // if the pixel is part of the user
       if (userMap[i] != 0) {
         frame.set(i, true);
       } else {
@@ -198,6 +198,7 @@ SilhouetteFrame getSilhouette() {
       }
     }
     silhouetteCache.add(frame);
+    
   } else {
     // if the cache has enough frames from playback get the current one
     if(silhouetteCache.canPlayback()) {
@@ -211,6 +212,15 @@ SilhouetteFrame getSilhouette() {
   return frame;
 }
 
+void initResultImage() {
+  for (int i=0; i < WIDTH * HEIGHT; i++) {
+   resultImage.pixels[i] = color(0,0,0);
+  }
+}
+
+/*
+ * apply the action clip on the result image
+ */
 void addActionClip(Clip clip) {
   if(clip==null)
     return;
@@ -227,13 +237,11 @@ void addActionClip(Clip clip) {
   resultImage.updatePixels();
 }
 
+/*
+ * process both silhouette and background video content on the result image
+ */
 boolean overlayVideo() {
   SilhouetteClip clip = clipMgr.getCurrent();
-  boolean hasBackground = clip.hasBackground();
-  boolean hasSilhouette = clip.hasSilhouette();
-  
-  //TODO: get rid of overlay mode (DEPRECATED)
-  OverlayMode overlayMode =  clipMgr.getCurrentOverlayMode();
   
   if(clip!=previousClip) {
     previousClip = clip;
@@ -246,12 +254,12 @@ boolean overlayVideo() {
     return false; // no clip to overlay
   }
   
-  if(hasSilhouette && resultImage.pixels.length!=clip.silhouetteMovie.pixels.length) {
+  if(clip.hasSilhouette() && resultImage.pixels.length!=clip.silhouetteMovie.pixels.length) {
     println("warning: silhouette clip size mismatch: skipping...");
     return false;
   }
   
-  if(hasBackground && resultImage.pixels.length!=clip.backgroundMovie.pixels.length) {
+  if(clip.hasBackground() && resultImage.pixels.length!=clip.backgroundMovie.pixels.length) {
     println("warning: background clip size mismatch: skipping...");
     return false;
   }
@@ -259,9 +267,9 @@ boolean overlayVideo() {
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
     if (maskedColor != 0) {
-      resultImage.pixels[i] = hasSilhouette ? clip.silhouetteMovie.pixels[i] : color(0,0,0);
+      resultImage.pixels[i] = clip.hasSilhouette() ? clip.silhouetteMovie.pixels[i] : color(0,0,0);
     } else {
-      resultImage.pixels[i] = hasBackground ? clip.backgroundMovie.pixels[i] : color(0,0,0);
+      resultImage.pixels[i] = clip.hasBackground() ? clip.backgroundMovie.pixels[i] : color(0,0,0);
     }
   }
   
@@ -280,6 +288,9 @@ PImage resizeSilhouette(PImage image) {
   return image;
 }
 
+/*
+ * apply a blur filter on the given image
+ */
 void smoothEdges(PImage image) {
   if(smooth > 0) {
     image.filter(BLUR, smooth);
@@ -287,7 +298,7 @@ void smoothEdges(PImage image) {
 }
 
 /*
- * convert the silhouette to an image
+ * convert the silhouette to an actual image
  */
 PImage convertSilhouette(SilhouetteFrame frame) {
   if(frame==null) {
@@ -310,6 +321,9 @@ PImage convertSilhouette(SilhouetteFrame frame) {
   return image;  
 }
 
+/*
+ * apply the silhouette on the resultImage
+ */
 void addSilhouette(PImage silhouette) {
   int maskedColor = 0;
   if(shouldMirrorSilouette) {
