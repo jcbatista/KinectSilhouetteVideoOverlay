@@ -94,8 +94,9 @@ void draw() {
     if (tracking) {
       if(shouldOverlayVideo && !clipMgr.isStarted()) {
         clipMgr.start();
+        actionMgr.start();
       }
-      
+                
       loadPixels();
      
       // create a buffer image that will contain the rendered content

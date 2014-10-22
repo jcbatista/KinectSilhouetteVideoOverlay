@@ -9,13 +9,13 @@ class ActionClipSettings {
   int frequency;
 }
 
-public class IntPair { 
-   int first; 
-   int second; 
-   IntPair(int fisrt, int second) { 
-   this.first = first; 
-   this.second = second; 
-  } 
+class IntPair { 
+   IntPair(int first, int second) { 
+     this.first = first; 
+     this.second = second; 
+  }   
+  int first; 
+  int second; 
 } 
 
 class ActionClipManager {
@@ -30,10 +30,14 @@ class ActionClipManager {
       initClips(settings);
       listActionClips();
     }
-    reset();
   }
+  
+  void start() {
+     reset();
+  }
+  
  
-  void reset() {
+  private void reset() {
      runStartTime = System.nanoTime();
      currentTime = 0;
      previousTime = 0;
@@ -47,7 +51,7 @@ class ActionClipManager {
    int clipTimeStart = 0;
    int clipIndex = 0;
    for(int i=0; i<frequency; i++) {
-     clipIndex  =  int(random(0, clips.size())); // get a random action clip
+     clipIndex = int(random(0, clips.size())); // get a random action clip
      Clip clip = clips.get(clipIndex);
      periodTimeStart = i*period;
      periodTimeEnd = i*period + period;
@@ -88,7 +92,7 @@ class ActionClipManager {
   
   int getClipToStart() {
     int clipIndex = -1; // index of the clip to start
-    // clips are store in a {clip index, time to start} pair
+    // clips are stored as a {clip index, time to start} value pair
     for(IntPair clipPair: scheduledClips) {
       if(clipPair.second == currentTime) {
         clipIndex = clipPair.first;
@@ -98,8 +102,7 @@ class ActionClipManager {
     return clipIndex;
   }
   
-  private void handleTimeChanges()
-  {
+  private void handleTimeChanges() {
     currentTime = getEllapsedTime();
     if(currentTime != previousTime) {
       previousTime = currentTime;
