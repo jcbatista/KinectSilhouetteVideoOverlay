@@ -110,11 +110,11 @@ class ActionClipManager {
       if(currentTime > runLengthPeriod) {
         reset();
       } 
-      
+            
       int clipIndexToStart = getClipToStart();
       if(clipIndexToStart != -1) {
         currentClip = clips.get(clipIndexToStart);
-        println("starting action clip index: " + clipIndexToStart);
+        println("starting action clip index: " + clipIndexToStart);        
         currentClip.start();
       }
     }
