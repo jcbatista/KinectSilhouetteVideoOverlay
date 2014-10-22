@@ -2,7 +2,7 @@ import processing.video.*;
 
 class Clip {
   
-  // Note: it's asssumed that the silhouette vidoe needs to be longer or identical in length of the background video. 
+  // Note: it's asssumed that the silhouette vidoe length needs to be longer or identical to the length of the background video 
   
   Clip(ClipInfo clipInfo)
   {
@@ -26,7 +26,9 @@ class Clip {
     if(filename==null || filename=="") {
       return null;
     }  
-    return globalLoadMovie(filename);
+    Movie movie = globalLoadMovie(filename);
+    movie.pause();
+    return movie; 
   }
 
   void setDuration(int duration) {

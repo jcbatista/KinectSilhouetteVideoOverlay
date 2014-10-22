@@ -4,7 +4,6 @@ import java.util.LinkedList;
 import processing.video.*;
 import processing.opengl.*; 
 import SimpleOpenNI.*;
-
 import netP5.*;
 
 /*
@@ -55,7 +54,7 @@ IntVector userList;
 
 //OpenCV openCV;
 
-// Movie requires a Processing applet reference, therefore it needs to remain in the root class
+// The Movie object requires a Processing applet reference, therefore it needs to remain in the main class
 Movie globalLoadMovie(String filename) {
   return new Movie(this, dataPath("") + "/clips/" + filename);
 }
