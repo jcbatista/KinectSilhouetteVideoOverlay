@@ -101,8 +101,8 @@ class ConfigManager {
     return data;
   }
   
-  ActionSettings getActionSettings() {
-    ActionSettings settings = new ActionSettings();
+  ActionClipSettings getActionClipSettings() {
+    ActionClipSettings settings = new ActionClipSettings();
     JSONObject actionData = configJSON.getJSONObject("actions");
 
     settings.frequency = actionData.getInt("frequency");

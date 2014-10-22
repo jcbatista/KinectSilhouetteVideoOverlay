@@ -1,6 +1,4 @@
 import java.util.LinkedList;
-//import gab.opencv.*;
-//import java.awt.*;
 import processing.video.*;
 import processing.opengl.*; 
 import SimpleOpenNI.*;
@@ -8,11 +6,11 @@ import netP5.*;
 
 /*
  * Description:
- *   use the kinect to obtain a silhoutte and overlay video on top
+ *
+ *   Concept for an interactive art installation project where people in the scene are used as a canvas 
+ *   on which video imagery gets overlayed in realtime.
  * 
- *   @Authors: Jean-Claude Batista, 
- *             Comperas (http://itp.nyu.edu/~dbo3/comperas/) (See Authors)
- *             Greg Borenstein
+ *   @Authors: Jean-Claude Batista             
  *
  *   Based on Greg's Book Making things see. Also based on the Comperas source tree
  *      https://github.com/ITPNYU/Comperas/tree/master/KinectBackgroundRemoval
@@ -23,68 +21,40 @@ import netP5.*;
  *
  */
 
-SimpleOpenNI kinect;
-SilhouetteClipManager clipMgr; 
-ConfigManager configMgr;
-ActionManager actionMgr;
-OscManager oscManager;
-SilhouetteFrameCache silhouetteCache;
-boolean shouldResizeSilhouette = false;
-boolean shouldOverlayVideo = false;
-boolean shouldMirrorSilouette = false;
-SilhouettePadding silhouettePadding;
-
-boolean tracking = false; 
-int userID;
-int[] userMap;
-int colorMask = 0xffffff; // skip alpha channel
-int smooth = 0;
-
-// declare our images 
-PImage resultImage;
-
-int KINECT_WIDTH  = 640;
-int KINECT_HEIGHT = 480;
-int WIDTH  = 640;  // WIDTH = 1280;
-int HEIGHT = 480;  // HEIGHT = 720;
-
-NetAddress myRemoteLocation;
-
-IntVector userList;
-
-//OpenCV openCV;
-
-// The Movie object requires a Processing applet reference, therefore it needs to remain in the main class
-Movie globalLoadMovie(String filename) {
-  return new Movie(this, dataPath("") + "/clips/" + filename);
-}
+/*
+ * constants
+ */
+final int KINECT_WIDTH  = 640;
+final int KINECT_HEIGHT = 480;
+final int WIDTH  = 640;  // WIDTH = 1280;
+final int HEIGHT = 480;  // HEIGHT = 720;
+final int colorMask = 0xffffff; // skip alpha channel
 
 void setup() {
-  size(WIDTH, HEIGHT);
-  configMgr = new ConfigManager();
+  size(WIDTH, HEIGHT); 
+  configMgr = new ConfigManager();  
+  font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on
+  
+  initKinect();
+   
+  initComponents(); 
+  
+  smooth = configMgr.getSmoothSilhouette(); // silhouette smoothing ratio
+  
+  LinkedList<SilhouetteClipInfo> clipList = configMgr.getClips();
+  clipMgr.add(clipList); 
+  
+  // display all the clips available for playback
   configMgr.listClips();
-  
-  silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
-  actionMgr = new ActionManager(configMgr.getActionSettings());
-  shouldOverlayVideo = configMgr.overlayVideo();
-  shouldResizeSilhouette = configMgr.resizeSilhouette();
-  shouldMirrorSilouette = configMgr.mirrorSilhouette();
-  silhouettePadding = configMgr.getSilhouettePadding();
-  
-  clipMgr = new SilhouetteClipManager(this);
-  LinkedList<SilhouetteClipInfo> clipInfoList = configMgr.getClips();
-  clipMgr.add(clipInfoList);
-  
+}
+
+void initKinect() {
   kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
   if(kinect.isInit() == false) {  
      println("Can't init SimpleOpenNI, maybe the camera is not connected!"); 
      exit();
      return;  
-  }
-  
-  smooth = configMgr.getSmoothSilhouette(); // silhouette smoothing ration 
-  
-  oscManager = new OscManager(configMgr.getOscSettings());
+  } 
 
   // enable depthMap generation 
   kinect.enableDepth();
@@ -98,28 +68,77 @@ void setup() {
 
   // turn on depth/color alignment
   kinect.alternativeViewPointDepthToImage();
-
+  
+  // list of people in the scene
   userList = new IntVector();
-  //openCV = new OpenCV(this, KINECT_WIDTH, KINECT_HEIGHT);
-  font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on
 }
 
-// TODO refactor this
-int maxDumpCount = 1000;
-int totalDumpCount = 0;
-void dumpImage(PImage image, int nbPixels) {
-  if(maxDumpCount <= totalDumpCount) {
-    return;
-  }
-  println("dumping " + nbPixels + "pixels");
-  for (int i=0; i < nbPixels /*resultImage.pixels.length*/; i++) {
-    if(totalDumpCount < maxDumpCount) {
-      println(hex(resultImage.pixels[i]));
-      totalDumpCount++;
+void initComponents() {
+  oscManager = new OscManager(configMgr.getOscSettings());
+  silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
+  actionMgr = new ActionClipManager(configMgr.getActionClipSettings());
+  shouldOverlayVideo = configMgr.overlayVideo();
+  shouldResizeSilhouette = configMgr.resizeSilhouette();
+  shouldMirrorSilouette = configMgr.mirrorSilhouette();
+  silhouettePadding = configMgr.getSilhouettePadding();
+  clipMgr = new SilhouetteClipManager(this);
+}
+
+void draw() {    
+    kinect.update();
+    if (tracking) {
+      if(shouldOverlayVideo && !clipMgr.isStarted()) {
+        // TODO: need to send OSC message when clip starts / ends
+        clipMgr.start();
+      }
+      
+      loadPixels();
+     
+      //create a buffer image to work with instead of using sketch pixels
+      resultImage = new PImage(WIDTH, HEIGHT, RGB); 
+       
+      if(actionMgr.shouldPlay()) {
+        addActionClip(actionMgr.getCurrent());  
+      } else {
+        // initialize the result image
+        for (int i=0; i < WIDTH * HEIGHT; i++) {
+           resultImage.pixels[i] = color(0,0,0);
+        }
+      }
+                   
+      SilhouetteFrame silhouetteFrame = getSilhouette(); // should return a frame
+      PImage silhouette = convertSilhouette(silhouetteFrame);
+      if(silhouette!=null) {
+        if(shouldResizeSilhouette) {
+          silhouette = resizeSilhouette(silhouette); 
+        }
+
+        silhouette.updatePixels();
+        addSilhouette(silhouette);
+      }
+      
+      smoothEdges(resultImage); 
+              
+      //  don't display an image if video overlay failed
+      if(shouldOverlayVideo && !overlayVideo()) {
+         return; 
+      }
+      
+      resultImage.updatePixels();
+      image(resultImage, 0, 0);
+
+      processCenterOfMass();
+      
+      drawElapsedTime();
+      
+    } else {
+      // get the Kinect color image
+      PImage rgbImage = kinect.rgbImage();
+      image(rgbImage, 0, 0);
     }
-  }
 }
 
+// TODO: REMOVE DEPRECATED
 void convertPosTo720p(PVector position) {
   position.x = position.x * WIDTH / KINECT_WIDTH;
   position.y = position.y * HEIGHT/ KINECT_HEIGHT;
@@ -149,7 +168,6 @@ void processCenterOfMass()
   }
 }
 
-boolean hasUserMap = false;
 SilhouetteFrame getSilhouette() { 
   SilhouetteFrame frame =  null;
   userMap = kinect.userMap();
@@ -209,14 +227,12 @@ void addActionClip(Clip clip) {
   resultImage.updatePixels();
 }
 
-Clip previousClip = null; // TODO remove
-
 boolean overlayVideo() {
   SilhouetteClip clip = clipMgr.getCurrent();
   boolean hasBackground = clip.hasBackground();
   boolean hasSilhouette = clip.hasSilhouette();
   
-  // TODO get rid of overlay mode (DEPRECATED)
+  //TODO: get rid of overlay mode (DEPRECATED)
   OverlayMode overlayMode =  clipMgr.getCurrentOverlayMode();
   
   if(clip!=previousClip) {
@@ -335,71 +351,6 @@ void drawElapsedTime() {
   text("Elapsed: " + str(actionMgr.getElapseTime()), 10, 35);  
 }
 
-void draw() {
-  //try {
-    kinect.update();
-    if (tracking) {
-      if(shouldOverlayVideo && !clipMgr.isStarted()) {
-        // TODO: need to send OSC message when clip starts / ends
-        clipMgr.start();
-      }
-      
-      //ask kinect for bitmap of user pixels
-      loadPixels();
-     
-      //create a buffer image to work with instead of using sketch pixels
-      resultImage = new PImage(WIDTH, HEIGHT, RGB); 
-       
-      if(actionMgr.shouldPlay()) {
-        addActionClip(actionMgr.getCurrent());  
-      } else {
-        // initialize the result image
-        for (int i=0; i < WIDTH * HEIGHT; i++) {
-           resultImage.pixels[i] = color(0,0,0);
-        }
-      }
-                   
-      SilhouetteFrame silhouetteFrame = getSilhouette(); // should return a frame
-      PImage silhouette = convertSilhouette(silhouetteFrame);
-      if(silhouette!=null) {
-        if(shouldResizeSilhouette) {
-          silhouette = resizeSilhouette(silhouette); 
-        }
-
-        silhouette.updatePixels();
-        addSilhouette(silhouette);
-      }
-      
-      smoothEdges(resultImage); 
-              
-      // dumpImage(resultImage, 1000);
-
-      //  don't display an image if video overlay failed
-      if(shouldOverlayVideo && !overlayVideo()) {
-         return; 
-      }
-      
-      resultImage.updatePixels();
-      image(resultImage, 0, 0);
-
-      processCenterOfMass();
-      
-      drawElapsedTime();
-      
-    } else {
-      // get the Kinect color image
-      PImage rgbImage = kinect.rgbImage();
-      image(rgbImage, 0, 0);
-    }
-  /*
-  } catch (Exception e) {
-    println("Houston, we have a problem !!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    e.printStackTrace();
-    exit();
-  }
-  */
-}
-
 // Called every time a new frame is available to read
 void movieEvent(Movie m) {
   m.read();
@@ -430,6 +381,39 @@ void oscEvent(OscMessage theOscMessage) {
   */
 }
 
+// The Movie object requires a Processing applet reference, therefore it needs to remain in the main class
+Movie globalLoadMovie(String filename) {
+  return new Movie(this, dataPath("") + "/clips/" + filename);
+}
+
+
+/*
+ * Members
+ */
+
+private SimpleOpenNI kinect; // Kinect API
+private boolean hasUserMap = false;
+private Clip previousClip = null; // TODO: might consider changing previousClip related logic
+private SilhouetteClipManager clipMgr; 
+private ConfigManager configMgr;
+private ActionClipManager actionMgr;
+private OscManager oscManager;
+private SilhouetteFrameCache silhouetteCache;
+
+private boolean shouldResizeSilhouette = false;
+private boolean shouldOverlayVideo = false;
+private boolean shouldMirrorSilouette = false;
+private SilhouettePadding silhouettePadding;
+
+private boolean tracking = false; 
+private int userID;
+private int[] userMap;
+
+private int smooth = 0;
+private PImage resultImage;
+private NetAddress myRemoteLocation;
+private IntVector userList;
 private PFont font;
 private SilhouetteFrame previousFrame = null;
 private boolean usingFrameCache = true;
+
