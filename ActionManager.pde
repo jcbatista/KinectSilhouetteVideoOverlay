@@ -58,27 +58,19 @@ class ActionManager {
  }
   
   void initClips(ActionSettings settings) {
-
     for (int i=0; i < settings.clips.size(); i++) { 
-      ClipInfo clipInfo = new ClipInfo();
-      clipInfo.backgroundFilename = settings.clips.get(i);
-      Clip clip = new Clip(clipInfo);
+      String filename = settings.clips.get(i);
+      Clip clip = new Clip(filename);
       clip.duration = settings.durations.get(i); 
       clips.add(clip);
     }
-    
-    // TODO REMOVE THIS
-    //clips.get(0).movie.loop();
   }
   
   void listActionClips() {
     println("*** Listing defined action clips ***");
     int count = 1;
     for (Clip clip : clips) {
-      print(count + ".");
-      if(clip.clipInfo.backgroundFilename!=null) {
-        println("action clip = "+ clip.clipInfo.backgroundFilename + " duration: " + clip.duration);
-      }
+      println(count + ". action clip = "+ clip.getFilename() + " duration: " + clip.duration);
       count++;
     }
     println("*** Done. ***");

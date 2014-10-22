@@ -11,12 +11,12 @@ class ConfigManager {
     configJSON = loadJSONObject(configFilePath);
   }
   
-  LinkedList<ClipInfo> getClips() {  
-    LinkedList<ClipInfo> list = new LinkedList<ClipInfo>();
+  LinkedList<SilhouetteClipInfo> getClips() {  
+    LinkedList<SilhouetteClipInfo> list = new LinkedList<SilhouetteClipInfo>();
     
     JSONArray clips = configJSON.getJSONArray("clips");
     for(int i=0; i < clips.size(); i++) {
-      ClipInfo clipInfo = new ClipInfo();
+      SilhouetteClipInfo clipInfo = new SilhouetteClipInfo();
       JSONObject clipData = clips.getJSONObject(i);
       
       if(clipData.hasKey("silhouette")) {
@@ -120,9 +120,9 @@ class ConfigManager {
  
   void listClips() {
     println("*** Listing defined clips ***");
-    LinkedList<ClipInfo> clips = getClips();
+    LinkedList<SilhouetteClipInfo> clips = getClips();
     int count = 1;
-    for (ClipInfo clip : clips) {
+    for (SilhouetteClipInfo clip : clips) {
       print(count + ".");
       if(clip.silhouetteFilename!=null && clip.silhouetteFilename!="") {
         print ("silhouette clip = "+ clip.silhouetteFilename + " ");

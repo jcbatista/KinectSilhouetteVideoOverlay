@@ -1,26 +1,22 @@
-import processing.video.*;
 
 class Clip {
   
   // Note: it's asssumed that the silhouette vidoe length needs to be longer or identical to the length of the background video 
   
-  Clip(ClipInfo clipInfo)
+  Clip()
   {
-    this.clipInfo = clipInfo;
-    this.silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
-    this.backgroundMovie = loadMovie(clipInfo.backgroundFilename);
-    this.movie = silhouetteMovie != null ? silhouetteMovie: backgroundMovie;
     duration = -1;
     startTime = 0;
   }
   
-  boolean hasSilhouette() {
-    return silhouetteMovie != null;
+  Clip(String filename)
+  {
+    this.filename = filename;
+    movie = loadMovie(filename);
+    duration = -1;
+    startTime = 0;
   }
   
-  boolean hasBackground() {
-    return backgroundMovie != null;
-  }
   
   Movie loadMovie(String filename) {
     if(filename==null || filename=="") {
@@ -42,56 +38,37 @@ class Clip {
     return (int)seconds;
   }
   
- int count = 0;
  boolean hasCompleted() {
    //return !movie.available();
 
    if(duration==-1) {
      return false;
    }
-   /*
-   // TODO REMOVE
-   if(count<100)
-   {
-    // println("ellapsed time="+seconds);
-     System.out.format("getEllapsedTime() : %d Seconds ", getEllapsedTime());
-     System.out.format("duration: %d \n", duration);
-     count++;
-   }
-   */
+
    return getEllapsedTime() > duration;
  }
  
   void start() {
-    if(hasSilhouette()) {
-      silhouetteMovie.play();
-      silhouetteMovie.volume(0);
-    }
-    
-    if(hasBackground()) {
-      backgroundMovie.play();
-      backgroundMovie.volume(0);
-    }
+
+      movie.play();
+      movie.volume(0);
     
     duration = (int) movie.duration();
     startTime = System.nanoTime();
   }
   
   void stop() {
-    if(silhouetteMovie != null) {
-      silhouetteMovie.stop();
-    }
-    if(backgroundMovie != null) {
-      backgroundMovie.stop();
-    }
-    startTime = 0;
+     movie.stop();
+     startTime = 0;
   }
   
-  int duration; // in seconds or -1 if not set
-  long startTime; // start time in nanoseconds
-  ClipInfo clipInfo;
-  Movie silhouetteMovie; // can be null
-  Movie backgroundMovie;
-  Movie movie;
+  String getFilename() {
+    return filename;
+  }
+  
+  protected String filename;
+  protected int duration; // in seconds or -1 if not set
+  protected long startTime; // start time in nanoseconds
+  public Movie movie;
 }
 

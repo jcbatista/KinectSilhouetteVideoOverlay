@@ -24,7 +24,7 @@ import netP5.*;
  */
 
 SimpleOpenNI kinect;
-ClipManager clipMgr; 
+SilhouetteClipManager clipMgr; 
 ConfigManager configMgr;
 ActionManager actionMgr;
 OscManager oscManager;
@@ -71,8 +71,8 @@ void setup() {
   shouldMirrorSilouette = configMgr.mirrorSilhouette();
   silhouettePadding = configMgr.getSilhouettePadding();
   
-  clipMgr = new ClipManager(this);
-  LinkedList<ClipInfo> clipInfoList = configMgr.getClips();
+  clipMgr = new SilhouetteClipManager(this);
+  LinkedList<SilhouetteClipInfo> clipInfoList = configMgr.getClips();
   clipMgr.add(clipInfoList);
   
   kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
@@ -212,7 +212,7 @@ void addActionClip(Clip clip) {
 Clip previousClip = null; // TODO remove
 
 boolean overlayVideo() {
-  Clip clip = clipMgr.getCurrent();
+  SilhouetteClip clip = clipMgr.getCurrent();
   boolean hasBackground = clip.hasBackground();
   boolean hasSilhouette = clip.hasSilhouette();
   
