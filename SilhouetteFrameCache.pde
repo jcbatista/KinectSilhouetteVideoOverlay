@@ -13,6 +13,17 @@ class SilhouetteCacheData {
   int maxFrames = 8000;
 }
 
+class MetaData {
+  MetaData(int totalUsers, int userIndex, PVector position) {
+    this.totalUsers = totalUsers;
+    this.userIndex = userIndex;
+    this.position = position;
+  }
+  int totalUsers;
+  int userIndex;
+  PVector position;
+}
+
 class SilhouetteFrame {
   private BitSet bitSet;
   SilhouetteFrame() {
@@ -28,6 +39,7 @@ class SilhouetteFrameCache {
 
   SilhouetteFrameCache(SilhouetteCacheData data) {
     cache = new LinkedList<SilhouetteFrame>();
+    metaDataCache = new LinkedList<MetaData>();
     enabled = data.enabled;
     minFrames = data.minFrames;
     maxFrames = data.maxFrames;
@@ -71,8 +83,24 @@ class SilhouetteFrameCache {
     return frame;
   }
   
+  int getCurrentFrameIndex() {
+    return currentFrameIndex;
+  }
+  
+  void addMetaData(int totalUsers, int userIndex, PVector position) {
+    metaDataCache.add(new MetaData(totalUsers, userIndex, position));
+  }
+  
+  MetaData getMetaData(int index) {
+    if(!enabled || index==-1 || index >= metaDataCache.size()) {
+      return null;
+    }
+    return metaDataCache.get(index);
+  }
+  
   private boolean enabled = false;
   private boolean playbackReady = false;
+  private LinkedList<MetaData> metaDataCache;
   private LinkedList<SilhouetteFrame> cache;
   private int currentFrameIndex = -1;
   private int minFrames = 0; 
