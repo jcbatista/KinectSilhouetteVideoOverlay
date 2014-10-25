@@ -173,7 +173,7 @@ void processCenterOfMass()
         displayCenterOfMass(position);
         
         oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position);
-        SilhouetteFrame frame = silhouetteCache.getCurrent();
+        SilhouetteFrame frame = silhouetteCache.getLast();
         if(frame!=null) {
           frame.addMetaData(nbUsers, i, position);
         }

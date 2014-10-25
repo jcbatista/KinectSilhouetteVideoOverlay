@@ -37,6 +37,7 @@ class SilhouetteFrame {
   int size() { return bitSet.size(); }
   
   void addMetaData(int totalUsers, int userIndex, PVector position) {
+    // println("adding metadata for user " + userIndex);
     metaDataList.add(new MetaData(totalUsers, userIndex, position));
   }
   
@@ -85,6 +86,14 @@ class SilhouetteFrameCache {
           currentFrameIndex++;
           currentFrameIndex = (currentFrameIndex + 1) % size;
         }
+  }
+  
+  SilhouetteFrame getLast() {
+    SilhouetteFrame frame = null;    
+    if(enabled && cache.size() > 0) {
+      frame = cache.getLast();
+    }
+    return frame;
   }
   
   SilhouetteFrame getCurrent() {
