@@ -36,12 +36,12 @@ class ActionClipManager {
      reset();
   }
   
- 
   private void reset() {
      runStartTime = System.nanoTime();
      currentTime = 0;
      previousTime = 0;
      currentClip = null;
+     currentClipIndex = -1;
      schedule();
   }
   
@@ -113,8 +113,9 @@ class ActionClipManager {
             
       int clipIndexToStart = getClipToStart();
       if(clipIndexToStart != -1) {
-        currentClip = clips.get(clipIndexToStart);
-        println("starting action clip index: " + clipIndexToStart);        
+        currentClipIndex = clipIndexToStart;
+        currentClip = clips.get(currentClipIndex);
+        println("starting action clip index: " + currentClipIndex);        
         currentClip.start();
       }
     }
@@ -124,13 +125,22 @@ class ActionClipManager {
     return currentTime;
   }
   
-  Clip getCurrent() {
+  void next() {
     handleTimeChanges();
+  }
+  
+  Clip getCurrent() {    
     return currentClip!=null && !currentClip.hasCompleted() ? currentClip: null;
+  }
+  
+  int getCurrentIndex() {    
+    // println("current action clip index = " + currentClipIndex);
+    return currentClip!=null && !currentClip.hasCompleted() ? currentClipIndex: -1;
   }
   
   private LinkedList<IntPair> scheduledClips; // list of <clipIndex, start time (in seconds)> for a given run length
  
+  private int currentClipIndex = -1;
   private Clip currentClip = null;
   private int currentTime = 0;
   private int previousTime = 0;

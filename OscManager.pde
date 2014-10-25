@@ -20,13 +20,8 @@ class OscManager {
     oscP5 = new OscP5(this, data.serverPort, OscP5.UDP);
     myRemoteLocation = new NetAddress(data.clientAddress, data.clientPort);
   }
-  
-  // action: start => 1, stop => 0
-  void sendActionClip(int clipIndex, int action) {
-    // TODO implement
-  }
-  
-  void send(int clipIndex, int totalUsers, int userIndex, PVector position) {
+    
+  void send(int clipIndex, int totalUsers, int userIndex, PVector position, int actionClipIndex) {
     if(!enabled)
       return;
     
@@ -37,6 +32,7 @@ class OscManager {
     msg.add(position.x);
     msg.add(position.y);
     msg.add(position.z);
+    msg.add(actionClipIndex);
     oscP5.send(msg, myRemoteLocation); 
   }
   

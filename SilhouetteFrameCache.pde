@@ -106,10 +106,6 @@ class SilhouetteFrameCache {
     // println("currentFrameIndex=" + currentFrameIndex + " of " + size);
     return frame;
   }
-  
-  int getCurrentFrameIndex() {    
-    return enabled ? currentFrameIndex: -1;
-  }
      
   private boolean enabled = false;
   private boolean playbackReady = false;

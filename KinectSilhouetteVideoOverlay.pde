@@ -103,7 +103,9 @@ void draw() {
       resultImage = new PImage(WIDTH, HEIGHT, RGB); 
               
       if(actionMgr.shouldPlay()) {
-        addActionClip(actionMgr.getCurrent());  
+        actionMgr.next();
+        Clip actionClip = actionMgr.getCurrent();
+        addActionClip(actionClip);  
       } else {
         initResultImage();
       }
@@ -155,7 +157,7 @@ void processCenterOfMass()
     // were using cached frames, send the cached meta data using OSC
     SilhouetteFrame frame = silhouetteCache.getCurrent();
     for(MetaData metaData: frame.getMetaDataList()) {
-      oscManager.send(clipMgr.getCurrentIndex(), metaData.totalUsers,  metaData.userIndex, metaData.position);
+      oscManager.send(clipMgr.getCurrentIndex(), metaData.totalUsers,  metaData.userIndex, metaData.position, actionMgr.getCurrentIndex());
       displayCenterOfMass(metaData.position);
     }
   } else {
@@ -172,7 +174,7 @@ void processCenterOfMass()
         // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
         displayCenterOfMass(position);
         
-        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position);
+        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position, actionMgr.getCurrentIndex());
         SilhouetteFrame frame = silhouetteCache.getLast();
         if(frame!=null) {
           frame.addMetaData(nbUsers, i, position);
