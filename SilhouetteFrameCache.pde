@@ -14,32 +14,42 @@ class SilhouetteCacheData {
 }
 
 class MetaData {
+    
   MetaData(int totalUsers, int userIndex, PVector position) {
     this.totalUsers = totalUsers;
     this.userIndex = userIndex;
     this.position = position;
   }
-  int totalUsers;
-  int userIndex;
-  PVector position;
+    
+  int totalUsers = 0;
+  int userIndex = 0;
+  PVector position = null;
 }
 
 class SilhouetteFrame {
-  private BitSet bitSet;
   SilhouetteFrame() {
     bitSet = new BitSet(KINECT_WIDTH * KINECT_HEIGHT);    
+    metaDataList = new LinkedList<MetaData>();
   }
   
   boolean get(int n) { return bitSet.get(n); }
   void set(int n, boolean value) { bitSet.set(n, value); }
   int size() { return bitSet.size(); }
+  
+  void addMetaData(int totalUsers, int userIndex, PVector position) {
+    metaDataList.add(new MetaData(totalUsers, userIndex, position));
+  }
+  
+  LinkedList<MetaData> getMetaDataList() { return metaDataList; }
+  
+  private LinkedList<MetaData> metaDataList;
+  private BitSet bitSet;
 }
 
 class SilhouetteFrameCache {
 
   SilhouetteFrameCache(SilhouetteCacheData data) {
     cache = new LinkedList<SilhouetteFrame>();
-    metaDataCache = new LinkedList<MetaData>();
     enabled = data.enabled;
     minFrames = data.minFrames;
     maxFrames = data.maxFrames;
@@ -69,13 +79,18 @@ class SilhouetteFrameCache {
     return success;
   }
   
+  void next() {
+        int size = cache.size();
+        if(enabled && size > 0) {
+          currentFrameIndex++;
+          currentFrameIndex = (currentFrameIndex + 1) % size;
+        }
+  }
+  
   SilhouetteFrame getCurrent() {
-    SilhouetteFrame frame = null;
-    int size = cache.size();
-    if(enabled && size > 0) {
-      currentFrameIndex++;
-      if(currentFrameIndex != -1) {
-        currentFrameIndex = (currentFrameIndex + 1) % size;
+    SilhouetteFrame frame = null;    
+    if(enabled && cache.size() > 0) {
+      if(currentFrameIndex != -1) {        
         frame = cache.get(currentFrameIndex);
       }          
     }
@@ -83,24 +98,12 @@ class SilhouetteFrameCache {
     return frame;
   }
   
-  int getCurrentFrameIndex() {
-    return currentFrameIndex;
+  int getCurrentFrameIndex() {    
+    return enabled ? currentFrameIndex: -1;
   }
-  
-  void addMetaData(int totalUsers, int userIndex, PVector position) {
-    metaDataCache.add(new MetaData(totalUsers, userIndex, position));
-  }
-  
-  MetaData getMetaData(int index) {
-    if(!enabled || index==-1 || index >= metaDataCache.size()) {
-      return null;
-    }
-    return metaDataCache.get(index);
-  }
-  
+     
   private boolean enabled = false;
   private boolean playbackReady = false;
-  private LinkedList<MetaData> metaDataCache;
   private LinkedList<SilhouetteFrame> cache;
   private int currentFrameIndex = -1;
   private int minFrames = 0; 

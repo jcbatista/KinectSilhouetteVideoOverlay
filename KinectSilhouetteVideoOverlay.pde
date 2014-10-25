@@ -135,37 +135,52 @@ void processSilhouette() {
   if(silhouette!=null) {
     if(shouldResizeSilhouette) {
       silhouette = resizeSilhouette(silhouette); 
-    }  
+    }
     silhouette.updatePixels();
     addSilhouette(silhouette);
   }
-  
   smoothEdges(resultImage); 
 }
 
-void processCenterOfMass()
-{
-  kinect.getUsers(userList);
-  int nbUsers = int(userList.size());
-
-  for(int i=0; i<nbUsers; i++) {
-    int userId = userList.get(i);
-    PVector position = new PVector();
-    kinect.getCoM(userId, position); // CoM <= Center Of Mass
-    kinect.convertRealWorldToProjective(position, position);
-    
-    if(!Float.isNaN(position.x)) {
-      // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
-      if(configMgr.showCenterOfMass()) {
-        fill(255, 0, 0);
-        ellipse(position.x, position.y, 25, 25);
-      }
-      
-      oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position);
-    }
+void displayCenterOfMass(PVector position) {
+  if(configMgr.showCenterOfMass()) {
+    fill(255, 0, 0);
+    ellipse(position.x, position.y, 25, 25);
   }
 }
 
+void processCenterOfMass()
+{  
+  if(usingFrameCache) {
+    // were using cached frames, send the cached meta data using OSC
+    SilhouetteFrame frame = silhouetteCache.getCurrent();
+    for(MetaData metaData: frame.getMetaDataList()) {
+      oscManager.send(clipMgr.getCurrentIndex(), metaData.totalUsers,  metaData.userIndex, metaData.position);
+      displayCenterOfMass(metaData.position);
+    }
+  } else {
+    kinect.getUsers(userList);
+    int nbUsers = int(userList.size());
+  
+    for(int i=0; i<nbUsers; i++) {
+      int userId = userList.get(i);
+      PVector position = new PVector();
+      kinect.getCoM(userId, position); // CoM <= Center Of Mass
+      kinect.convertRealWorldToProjective(position, position);
+      
+      if(!Float.isNaN(position.x)) {
+        // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
+        displayCenterOfMass(position);
+        
+        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position);
+        SilhouetteFrame frame = silhouetteCache.getCurrent();
+        if(frame!=null) {
+          frame.addMetaData(nbUsers, i, position);
+        }
+      }
+    }
+  }
+}
 
 /*
  * retrieves a silhouette frame ( a bitset where all the pixel that represent the silhouette are set to true )
@@ -190,6 +205,7 @@ SilhouetteFrame getSilhouette() {
       usingFrameCache = false;
     } 
     
+    // store silhouette frame in cache
     frame = new SilhouetteFrame();
     for (int i = 0; i < userMap.length; i++) {
       if (userMap[i] != 0) {
@@ -198,8 +214,7 @@ SilhouetteFrame getSilhouette() {
         frame.set(i, false);
       }
     }
-    silhouetteCache.add(frame);
-    
+    silhouetteCache.add(frame);    
   } else {
     // if the cache has enough frames from playback get the current one
     if(silhouetteCache.canPlayback()) {
@@ -207,6 +222,7 @@ SilhouetteFrame getSilhouette() {
         println("starting using Silhouette cached frames ...");
         usingFrameCache = true;
       } 
+      silhouetteCache.next();
       frame = silhouetteCache.getCurrent();
     }
   }
