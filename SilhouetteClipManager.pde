@@ -30,30 +30,44 @@ class SilhouetteClipManager
     clips.add(clip);
   }
   
-  private void start() {
+  void start() {        
     if(currentClipIndex==-1 && clips.size() > 0) {
       currentClipIndex = 0;
     }
+    start(currentClipIndex);
     currentClip = clips.get(currentClipIndex);
-    if(currentClip != null) {
-      
-      println("*********** now playing clip " + currentClipIndex + " of " + clips.size());
-      currentClip.start();
+  }
+  
+  private void start(int clipIndex) {
+    SilhouetteClip clip = clips.get(clipIndex);
+    if(clip != null && !clip.isStarted()) {      
+      println("*********** now playing clip " + clipIndex + " of " + clips.size());
+      clip.start();
       started = true;
-    } else {
+    } else if(clip == null) {
+      // ignore the case where the clip's already started
       println("clip couldn't be started ...");
     }
   }
   
+  private int nextClipIndex() {
+    return (currentClipIndex+1) % clips.size();
+  }
+  
   SilhouetteClip getCurrent() {
-    if(currentClip.hasCompleted()) {
-      
-      int size = clips.size();
-      if(size > 0) {
+  
+    // TODO: add the prestart clip logic here!!!!  
+    if(currentClip.almostCompleted()) {
+      start(nextClipIndex()); 
+    } else if(currentClip.hasCompleted()) {     
+      if(clips.size() > 0) {
         currentClip.stop(); // make sure the current clip is actually stopped
         // cycle to the next clip
-        currentClipIndex = (currentClipIndex+1) % size;        
-        start(); 
+        currentClipIndex = nextClipIndex();  
+        currentClip =  clips.get(currentClipIndex);
+        if(!currentClip.isStarted()) {
+          start(currentClipIndex); 
+        }
       }
     } 
     return currentClip;

@@ -50,6 +50,7 @@ class SilhouetteClip extends Clip {
     
     duration = (int) movie.duration();
     startTime = System.nanoTime();
+    started = true;
   }
   
   void stop() {
@@ -60,6 +61,7 @@ class SilhouetteClip extends Clip {
       backgroundMovie.stop();
     }
     startTime = 0;
+    started = false;
   }
   
   private SilhouetteClipInfo clipInfo;

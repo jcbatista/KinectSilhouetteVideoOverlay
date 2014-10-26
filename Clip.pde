@@ -15,6 +15,7 @@ class Clip {
     movie = loadMovie(filename);
     duration = -1;
     startTime = 0;
+    started = false;
   }
   
   void setDuration(int duration) {
@@ -29,13 +30,20 @@ class Clip {
   }
   
  boolean hasCompleted() {
-   //return !movie.available();
-
    if(duration==-1) {
      return false;
    }
 
    return getEllapsedTime() > duration;
+ }
+ 
+  boolean almostCompleted() {
+   if(duration==-1) {
+     return false;
+   }
+
+   int x = getEllapsedTime();
+   return x>= (duration - 3) && x<=duration;
  }
  
   void start() {
@@ -45,12 +53,17 @@ class Clip {
     
     duration = (int) movie.duration();
     startTime = System.nanoTime();
+    started = true;
   }
   
   void stop() {
      movie.stop();
      startTime = 0;
+     started = false;
+     
   }
+  
+  boolean isStarted() { return started; }
   
   String getFilename() {
     return filename;
@@ -71,6 +84,7 @@ class Clip {
     return movie; 
   }
  
+  protected boolean started;
   protected String filename;
   protected int duration;   // in seconds or -1 if not set
   protected long startTime; // start time in nanoseconds
