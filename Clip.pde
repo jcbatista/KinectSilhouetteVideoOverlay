@@ -66,6 +66,8 @@ class Clip {
     }  
     Movie movie = globalLoadMovie(filename);
     movie.pause();
+    // TODO: we might no longer need duration in the json.config file for action clips 
+    // println(filename + " duration=" + (int) movie.duration() + "!!");    
     return movie; 
   }
  

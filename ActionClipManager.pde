@@ -1,5 +1,5 @@
 class ActionClipSettings { 
-  // TODO actions need to send OSC information
+
   ActionClipSettings() {
     clips = new StringList();
     durations = new IntList(); // Note: clips and durations index must match
@@ -24,6 +24,7 @@ class ActionClipManager {
     clips = new LinkedList<Clip>();
     scheduledClips = new LinkedList<IntPair>();
     frequency = settings.frequency;
+    // TODO: runLengthPeriod should be in the config.json file
     runLengthPeriod = 10 * 60; // 10 minutes //60 * 60; // one hour (in seconds)
     period = runLengthPeriod / frequency;
     if(shouldPlay()) {
@@ -33,7 +34,9 @@ class ActionClipManager {
   }
   
   void start() {
-     reset();
+    if(shouldPlay()) {
+      reset();
+    }
   }
   
   private void reset() {
