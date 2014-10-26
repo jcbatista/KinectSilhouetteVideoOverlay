@@ -57,7 +57,8 @@ class Clip {
   }
   
   void stop() {
-     movie.stop();
+     // HACK: minize slowdown between clips by actually not stop a clip
+     // movie.stop();
      startTime = 0;
      started = false;
      
