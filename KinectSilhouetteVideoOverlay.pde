@@ -1,3 +1,4 @@
+import javax.swing.JFrame;
 import java.util.LinkedList;
 import processing.video.*;
 import processing.opengl.*; 
@@ -30,9 +31,11 @@ final int WIDTH  = 640;  // WIDTH = 1280;
 final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
 
-void setup() {
-  
+void setup() {  
   size(WIDTH, HEIGHT); 
+
+  // set black background for full screen mode
+  ((JFrame) frame).getContentPane().setBackground(java.awt.Color.BLACK);  
   
   initComponents();
   initConfigSettings();
@@ -46,7 +49,7 @@ void setup() {
   configMgr.listClips();
   
   // misc stuff
-  font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on
+  font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on 
 }
 
 void initKinect() {
