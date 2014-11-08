@@ -1,5 +1,5 @@
-class ActionClipSettings { 
 
+class ActionClipSettings { 
   ActionClipSettings() {
     clips = new StringList();
     durations = new IntList(); // Note: clips and durations index must match
@@ -20,13 +20,14 @@ class IntPair {
 
 class ActionClipManager {
   
-  ActionClipManager(ActionClipSettings settings) {
+  ActionClipManager(ActionClipSettings settings, Timeline timeline) {
+    this.timeline = timeline;
     clips = new LinkedList<Clip>();
     scheduledClips = new LinkedList<IntPair>();
     frequency = settings.frequency;
     // TODO: runLengthPeriod should be in the config.json file
-    runLengthPeriod = 10 * 60; // 10 minutes //60 * 60; // one hour (in seconds)
-    period = runLengthPeriod / frequency;
+   
+    period = timeline.duration / frequency;
     if(shouldPlay()) {
       initClips(settings);
       listActionClips();
@@ -40,9 +41,6 @@ class ActionClipManager {
   }
   
   private void reset() {
-     runStartTime = System.nanoTime();
-     currentTime = 0;
-     previousTime = 0;
      currentClip = null;
      currentClipIndex = -1;
      schedule();
@@ -87,17 +85,11 @@ class ActionClipManager {
     return frequency!=0;
   }
   
-  int getEllapsedTime() {
-    double elapseTime = System.nanoTime() - runStartTime;
-    double seconds = (double)elapseTime / 1000000000d; 
-    return (int)seconds;
-  }
-  
   int getClipToStart() {
     int clipIndex = -1; // index of the clip to start
     // clips are stored as a {clip index, time to start} value pair
     for(IntPair clipPair: scheduledClips) {
-      if(clipPair.second == currentTime) {
+      if(clipPair.second == timeline.getCurrentTime()) {
         clipIndex = clipPair.first;
         break;
       }
@@ -106,14 +98,6 @@ class ActionClipManager {
   }
   
   private void handleTimeChanges() {
-    currentTime = getEllapsedTime();
-    if(currentTime != previousTime) {
-      previousTime = currentTime;
-
-      if(currentTime > runLengthPeriod) {
-        reset();
-      } 
-            
       int clipIndexToStart = getClipToStart();
       if(clipIndexToStart != -1) {
         currentClipIndex = clipIndexToStart;
@@ -121,15 +105,12 @@ class ActionClipManager {
         println("starting action clip index: " + currentClipIndex);        
         currentClip.start();
       }
-    }
   }
-  
-  int getElapseTime() {
-    return currentTime;
-  }
-  
+    
   void next() {
-    handleTimeChanges();
+    if(timeline.hasTimeChanged()) {
+      handleTimeChanges();
+    }
   }
   
   Clip getCurrent() {    
@@ -141,15 +122,12 @@ class ActionClipManager {
     return currentClip!=null && !currentClip.hasCompleted() ? currentClipIndex: -1;
   }
   
+  
+  private Timeline timeline = null;
   private LinkedList<IntPair> scheduledClips; // list of <clipIndex, start time (in seconds)> for a given run length
  
   private int currentClipIndex = -1;
   private Clip currentClip = null;
-  private int currentTime = 0;
-  private int previousTime = 0;
-  
-  private double runStartTime = 0;
-  private int runLengthPeriod = 0; // an hour period
   private int period = 0;
   private int frequency = 0;
   private LinkedList<Clip> clips;

@@ -76,11 +76,12 @@ void initKinect() {
   userList = new IntVector();
 }
 
-void initComponents() {
+void initComponents() {  
+  timeline = new Timeline();
   configMgr = new ConfigManager();  
   oscManager = new OscManager(configMgr.getOscSettings());
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
-  actionMgr = new ActionClipManager(configMgr.getActionClipSettings());  
+  actionMgr = new ActionClipManager(configMgr.getActionClipSettings(), timeline);  
   clipMgr = new SilhouetteClipManager(this);
 }
 
@@ -125,8 +126,8 @@ void draw() {
       image(resultImage, 0, 0);
 
       processCenterOfMass();      
-      drawElapsedTime();    
-      
+      drawElapsedTime();
+      timeline.tick();      
     } else {
       // get the Kinect color image
       PImage rgbImage = kinect.rgbImage();
@@ -384,7 +385,7 @@ void drawElapsedTime() {
   }
   textFont(font, 36);                
   fill(color(255,0,0));
-  text("Elapsed: " + str(actionMgr.getElapseTime()), 10, 35);  
+  text("Elapsed: " + str(timeline.getCurrentTime()), 10, 35);  
 }
 
 // Called every time a new frame is available to read
@@ -427,6 +428,7 @@ Movie globalLoadMovie(String filename) {
  * Members
  */
 
+private Timeline timeline;
 private SimpleOpenNI kinect; // Kinect API
 private boolean hasUserMap = false;
 private Clip previousClip = null; // TODO: might consider changing previousClip related logic
