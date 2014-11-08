@@ -2,7 +2,11 @@ class Timeline {
   Timeline() {
     // TODO: needs to be set to the length of the sequence
     duration = 10 * 60; // default to one hour (in seconds)
-    reset();
+    
+  }
+  
+  void start() {
+    reset();    
   }
   
   void setDuration(int duration) {

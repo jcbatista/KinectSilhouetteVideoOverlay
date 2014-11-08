@@ -101,6 +101,7 @@ void draw() {
       if(shouldOverlayVideo && !clipMgr.isStarted()) {
         clipMgr.start();
         actionMgr.start();
+        timeline.start();
       }
                 
       loadPixels();

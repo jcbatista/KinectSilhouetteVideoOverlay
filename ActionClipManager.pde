@@ -24,9 +24,7 @@ class ActionClipManager {
     this.timeline = timeline;
     clips = new LinkedList<Clip>();
     scheduledClips = new LinkedList<IntPair>();
-    frequency = settings.frequency;
-    // TODO: runLengthPeriod should be in the config.json file
-   
+    frequency = settings.frequency;   
     period = timeline.duration / frequency;
     if(shouldPlay()) {
       initClips(settings);
@@ -66,6 +64,7 @@ class ActionClipManager {
     for (int i=0; i < settings.clips.size(); i++) {
       String filename = settings.clips.get(i);
       Clip clip = new Clip(filename);
+      // TODO: no longer need duration support
       clip.duration = settings.durations.get(i); 
       clips.add(clip);
     }
