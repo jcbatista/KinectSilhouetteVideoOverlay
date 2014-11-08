@@ -2,9 +2,10 @@ import java.util.LinkedList;
 
 class SilhouetteClipManager
 {
-  SilhouetteClipManager(PApplet applet)
-  {
+  SilhouetteClipManager(PApplet applet, Timeline timeline)
+  {    
     this.applet  = applet;
+    this.timeline = timeline;
     dataPath = dataPath("") + "/clips/";
     clips = new LinkedList<SilhouetteClip>();
   }
@@ -13,21 +14,16 @@ class SilhouetteClipManager
     println("Loading clip: " + dataPath + filename);
     return new Movie(applet,  dataPath + filename);
   }
-  
+
   void add(SilhouetteClipInfo clipInfo) {
-    this.add(clipInfo, -1);
-  }
-  
-  void add(LinkedList<SilhouetteClipInfo> clipInfolist) {
-    for (SilhouetteClipInfo clipInfo : clipInfolist) {  
-      this.add(clipInfo, -1);
-    }
-  }
-  
-  void add(SilhouetteClipInfo clipInfo, int duration) {
     SilhouetteClip clip = new SilhouetteClip(clipInfo);
-    clip.setDuration(duration);
     clips.add(clip);
+  }  
+
+  void add(LinkedList<SilhouetteClipInfo> clipInfolist) {
+    for (SilhouetteClipInfo clipInfo : clipInfolist) {
+      this.add(clipInfo);
+    }
   }
   
   void start() {        
@@ -77,6 +73,14 @@ class SilhouetteClipManager
     return currentClipIndex;
   }
   
+  int getTotalDuration() {
+    int total = 0;
+    for (SilhouetteClip clip : clips) {    
+      total += clip.getDuration();  
+    }
+    return total;
+  }
+  
   boolean isStarted() { return started; }
   
   private boolean started = false;
@@ -85,4 +89,5 @@ class SilhouetteClipManager
   private int currentClipIndex = -1;
   private SilhouetteClip currentClip = null;
   private PApplet applet = null;
+  private Timeline timeline = null;
 };

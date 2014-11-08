@@ -20,7 +20,7 @@ class IntPair {
 
 class ActionClipManager {
   
-  ActionClipManager(ActionClipSettings settings, Timeline timeline) {
+  ActionClipManager(Timeline timeline, ActionClipSettings settings) {
     this.timeline = timeline;
     clips = new LinkedList<Clip>();
     scheduledClips = new LinkedList<IntPair>();

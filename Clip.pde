@@ -13,15 +13,11 @@ class Clip {
   {
     this.filename = filename;
     movie = loadMovie(filename);
-    duration = -1;
+    duration = (int) movie.duration();      
     startTime = 0;
     started = false;
   }
-  
-  void setDuration(int duration) {
-    this.duration = duration;
-  }
-  
+    
   int getEllapsedTime() {
     // TODO: doesn't work
     long elapseTime = System.nanoTime() - startTime;
@@ -50,8 +46,9 @@ class Clip {
     movie.jump(0);
     movie.play();
     movie.volume(0);
-    
-    duration = (int) movie.duration();
+    if(duration == -1) {
+      duration = (int) movie.duration();
+    }
     startTime = System.nanoTime();
     started = true;
   }
@@ -74,6 +71,14 @@ class Clip {
     return movie;
   }
   
+  int getDuration() {
+    if(duration==-1) {
+      println("warning: duration not set for clip name=" + filename);
+      return 0;
+    }
+    return duration;
+  }
+  
   protected Movie loadMovie(String filename) {
     if(filename==null || filename=="") {
       return null;
@@ -81,7 +86,7 @@ class Clip {
     Movie movie = globalLoadMovie(filename);
     movie.pause();
     // TODO: we might no longer need duration in the json.config file for action clips 
-    // println(filename + " duration=" + (int) movie.duration() + "!!");    
+    // println(filename + " duration=" + (int) movie.duration() + "!!!!!!!!");    
     return movie; 
   }
  

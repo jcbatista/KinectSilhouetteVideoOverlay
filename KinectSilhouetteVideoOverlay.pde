@@ -45,6 +45,8 @@ void setup() {
   LinkedList<SilhouetteClipInfo> clipList = configMgr.getClips();
   clipMgr.add(clipList); 
   
+  timeline.setDuration(clipMgr.getTotalDuration());
+  
   // display all the clips available for playback
   configMgr.listClips();
   
@@ -81,8 +83,8 @@ void initComponents() {
   configMgr = new ConfigManager();  
   oscManager = new OscManager(configMgr.getOscSettings());
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
-  actionMgr = new ActionClipManager(configMgr.getActionClipSettings(), timeline);  
-  clipMgr = new SilhouetteClipManager(this);
+  actionMgr = new ActionClipManager(timeline, configMgr.getActionClipSettings());  
+  clipMgr = new SilhouetteClipManager(this, timeline);
 }
 
 void initConfigSettings() {

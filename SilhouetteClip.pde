@@ -25,7 +25,7 @@ class SilhouetteClip extends Clip {
       filename = clipInfo.backgroundFilename;      
     }
     
-    duration = -1;  
+    duration = (int) movie.duration();     
     startTime = 0;
   }
     
@@ -48,7 +48,10 @@ class SilhouetteClip extends Clip {
       backgroundMovie.volume(0);
     }
     
-    duration = (int) movie.duration();
+    if(duration==-1){
+      duration = (int) movie.duration();
+    }
+    
     startTime = System.nanoTime();
     started = true;
   }

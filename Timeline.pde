@@ -1,8 +1,13 @@
 class Timeline {  
   Timeline() {
     // TODO: needs to be set to the length of the sequence
-    duration = 10 * 60; // 10 minutes // 60 * 60; // one hour (in seconds)
+    duration = 10 * 60; // default to one hour (in seconds)
     reset();
+  }
+  
+  void setDuration(int duration) {
+    this.duration = duration;
+    println("+++++++++++++++++++++timeline duration set to " + duration);
   }
      
   int getEllapsedTime() {
