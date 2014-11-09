@@ -34,7 +34,6 @@ class Clip {
  }
  
   void start() {
-    movie.jump(0);
     movie.play();
     movie.volume(0);
     timeline.start();
