@@ -5,58 +5,50 @@ class Clip {
   
   Clip()
   {
-    duration = -1;
-    startTime = 0;
+    timeline = new Timeline();
   }
   
   Clip(String filename)
   {
+    timeline = new Timeline();
     this.filename = filename;
     movie = loadMovie(filename);
-    duration = (int) movie.duration();      
-    startTime = 0;
+    int duration = (int) movie.duration();
+    timeline.setDuration(duration );
     started = false;
-  }
-    
-  int getEllapsedTime() {
-    // TODO: doesn't work
-    long elapseTime = System.nanoTime() - startTime;
-    double seconds = (double)elapseTime / 1000000000d; 
-    return (int)seconds;
-  }
+  }   
   
  boolean hasCompleted() {
-   if(duration==-1) {
-     return false;
-   }
-
-   return getEllapsedTime() > duration;
+   return timeline.hasCompleted();
  }
  
   boolean almostCompleted() {
-   if(duration==-1) {
+   if(timeline.getDuration()==-1) {
      return false;
    }
 
-   int x = getEllapsedTime();
-   return x>= (duration - 3) && x<=duration;
+   int currentTime = timeline.getCurrentTime();
+   int duration = timeline.getDuration();
+   // TODO: the clip "pre-start time should'nt be hardcoded
+   return currentTime >= (duration - 4) && currentTime <= duration;
  }
  
   void start() {
     movie.jump(0);
     movie.play();
     movie.volume(0);
-    if(duration == -1) {
-      duration = (int) movie.duration();
-    }
-    startTime = System.nanoTime();
+    timeline.start();
     started = true;
+  }
+  
+  void tick() {
+    timeline.tick();
   }
   
   void stop() {
      // HACK: minize slowdown between clips by actually not stop a clip
      // movie.stop();
-     startTime = 0;
+     timeline.reset();
      started = false;
      
   }
@@ -72,11 +64,11 @@ class Clip {
   }
   
   int getDuration() {
-    if(duration==-1) {
+    if(timeline.getDuration()==-1) {
       println("warning: duration not set for clip name=" + filename);
       return 0;
     }
-    return duration;
+    return timeline.getDuration();
   }
   
   protected Movie loadMovie(String filename) {
@@ -90,10 +82,9 @@ class Clip {
     return movie; 
   }
  
+  protected Timeline timeline; 
   protected boolean started;
   protected String filename;
-  protected int duration;   // in seconds or -1 if not set
-  protected long startTime; // start time in nanoseconds
   protected Movie movie;
 }
 

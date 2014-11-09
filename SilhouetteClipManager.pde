@@ -2,10 +2,9 @@ import java.util.LinkedList;
 
 class SilhouetteClipManager
 {
-  SilhouetteClipManager(PApplet applet, Timeline timeline)
+  SilhouetteClipManager(PApplet applet)
   {    
     this.applet  = applet;
-    this.timeline = timeline;
     dataPath = dataPath("") + "/clips/";
     clips = new LinkedList<SilhouetteClip>();
   }
@@ -89,5 +88,4 @@ class SilhouetteClipManager
   private int currentClipIndex = -1;
   private SilhouetteClip currentClip = null;
   private PApplet applet = null;
-  private Timeline timeline = null;
 };

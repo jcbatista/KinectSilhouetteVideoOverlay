@@ -12,7 +12,9 @@ class SilhouetteClip extends Clip {
   
   SilhouetteClip(SilhouetteClipInfo clipInfo)
   {
+    timeline = new Timeline();
     this.clipInfo = clipInfo;
+    
     silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
     backgroundMovie = loadMovie(clipInfo.backgroundFilename);
     
@@ -25,8 +27,7 @@ class SilhouetteClip extends Clip {
       filename = clipInfo.backgroundFilename;      
     }
     
-    duration = (int) movie.duration();     
-    startTime = 0;
+    timeline.setDuration( (int) movie.duration() );     
   }
     
   boolean hasSilhouette() {
@@ -45,14 +46,10 @@ class SilhouetteClip extends Clip {
     
     if(hasBackground()) {
       backgroundMovie.play();
-      backgroundMovie.volume(0);
+      backgroundMovie.volume(0);    
     }
     
-    if(duration==-1){
-      duration = (int) movie.duration();
-    }
-    
-    startTime = System.nanoTime();
+    timeline.start();
     started = true;
   }
   
@@ -63,7 +60,6 @@ class SilhouetteClip extends Clip {
     if(backgroundMovie != null) {
       backgroundMovie.stop();
     }
-    startTime = 0;
     started = false;
   }
   

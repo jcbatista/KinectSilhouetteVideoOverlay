@@ -25,11 +25,16 @@ class ActionClipManager {
     clips = new LinkedList<Clip>();
     scheduledClips = new LinkedList<IntPair>();
     frequency = settings.frequency;   
-    period = timeline.duration / frequency;
+    
     if(shouldPlay()) {
       initClips(settings);
       listActionClips();
-    }
+    } 
+  }
+  
+  void schedule() {
+    period = timeline.getDuration() / frequency;
+
   }
   
   void start() {
@@ -41,31 +46,13 @@ class ActionClipManager {
   private void reset() {
      currentClip = null;
      currentClipIndex = -1;
-     schedule();
+     processSchedule();
   }
-  
-  void schedule() {
-   int periodTimeStart = 0;
-   int periodTimeEnd = 0;
-   int clipTimeStart = 0;
-   int clipIndex = 0;
-   for(int i=0; i<frequency; i++) {
-     clipIndex = int(random(0, clips.size())); // get a random action clip
-     Clip clip = clips.get(clipIndex);
-     periodTimeStart = i*period;
-     periodTimeEnd = i*period + period;
-     clipTimeStart = int(random(periodTimeStart, periodTimeEnd - clip.duration));
-     println( "action clip index: " + clipIndex + " scheduled to start in " + clipTimeStart + " seconds ...");
-     scheduledClips.add(new IntPair(clipIndex, clipTimeStart));
-   }
- }
-  
+    
   void initClips(ActionClipSettings settings) {
     for (int i=0; i < settings.clips.size(); i++) {
       String filename = settings.clips.get(i);
       Clip clip = new Clip(filename);
-      // TODO: no longer need duration support
-      clip.duration = settings.durations.get(i); 
       clips.add(clip);
     }
   }
@@ -74,7 +61,7 @@ class ActionClipManager {
     println("*** Listing defined action clips ***");
     int count = 1;
     for (Clip clip : clips) {
-      println(count + ". action clip = "+ clip.getFilename() + " duration: " + clip.duration);
+      println(count + ". action clip = "+ clip.getFilename() + " duration: " + clip.getDuration());
       count++;
     }
     println("*** Done. ***");
@@ -97,13 +84,13 @@ class ActionClipManager {
   }
   
   private void handleTimeChanges() {
-      int clipIndexToStart = getClipToStart();
-      if(clipIndexToStart != -1) {
-        currentClipIndex = clipIndexToStart;
-        currentClip = clips.get(currentClipIndex);
-        println("starting action clip index: " + currentClipIndex);        
-        currentClip.start();
-      }
+    int clipIndexToStart = getClipToStart();
+    if(clipIndexToStart != -1) {
+      currentClipIndex = clipIndexToStart;
+      currentClip = clips.get(currentClipIndex);
+      println("starting action clip index: " + currentClipIndex);        
+      currentClip.start();
+    }
   }
     
   void next() {
@@ -120,6 +107,22 @@ class ActionClipManager {
     // println("current action clip index = " + currentClipIndex);
     return currentClip!=null && !currentClip.hasCompleted() ? currentClipIndex: -1;
   }
+  
+  private void processSchedule() {
+   int periodTimeStart = 0;
+   int periodTimeEnd = 0;
+   int clipTimeStart = 0;
+   int clipIndex = 0;
+   for(int i=0; i<frequency; i++) {
+     clipIndex = int(random(0, clips.size())); // get a random action clip
+     Clip clip = clips.get(clipIndex);
+     periodTimeStart = i*period;
+     periodTimeEnd = i*period + period;
+     clipTimeStart = int(random(periodTimeStart, periodTimeEnd - clip.getDuration()));
+     println( "action clip index: " + clipIndex + " scheduled to start in " + clipTimeStart + " seconds ...");
+     scheduledClips.add(new IntPair(clipIndex, clipTimeStart));
+   }
+ }
   
   
   private Timeline timeline = null;

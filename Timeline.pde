@@ -1,8 +1,21 @@
+class CyclicalTimeline extends Timeline {
+  void tick(){
+    super.tick();
+    if(currentTime > duration) {
+      reset();
+    }  
+  }
+  
+  void setDuration(int duration) {        
+    super.setDuration(duration);
+    println("main timeline duration set to " + duration);
+  }
+  
+}  
+
 class Timeline {  
   Timeline() {
-    // TODO: needs to be set to the length of the sequence
-    duration = 10 * 60; // default to one hour (in seconds)
-    
+    duration = -1; 
   }
   
   void start() {
@@ -11,10 +24,14 @@ class Timeline {
   
   void setDuration(int duration) {
     this.duration = duration;
-    println("+++++++++++++++++++++timeline duration set to " + duration);
   }
      
   int getEllapsedTime() {
+    
+    if(duration==-1) {
+      return 0;
+    }
+    
     double elapseTime = System.nanoTime() - runStartTime;
     double seconds = (double)elapseTime / 1000000000d; 
     return (int)seconds;
@@ -26,10 +43,7 @@ class Timeline {
     if(currentTime != previousTime) {
       timeChanged = true;
       previousTime = currentTime;
-    }    
-    if(currentTime > duration) {
-      reset();
-    }         
+    }           
   }
   
   boolean hasTimeChanged() {
@@ -44,16 +58,23 @@ class Timeline {
     return currentTime;
   }
   
-  private void reset() {
+  boolean hasCompleted() {  
+    if(duration==-1) {
+      return false;
+    }  
+    return currentTime > duration;    
+  }
+  
+  void reset() {
     runStartTime = System.nanoTime();
     currentTime = 0;
     previousTime = 0;
     timeChanged = true;
   }
   
-  private boolean timeChanged = false;
-  private int duration = 0;
-  private int currentTime = 0;
-  private int previousTime = 0;
-  private double runStartTime = 0;     
+  protected boolean timeChanged = false;
+  protected int duration = 0;
+  protected int currentTime = 0;
+  protected int previousTime = 0;
+  protected double runStartTime = 0;     
 }

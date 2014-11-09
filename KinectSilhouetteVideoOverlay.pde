@@ -46,6 +46,7 @@ void setup() {
   clipMgr.add(clipList); 
   
   timeline.setDuration(clipMgr.getTotalDuration());
+  actionMgr.schedule();
   
   // display all the clips available for playback
   configMgr.listClips();
@@ -79,12 +80,13 @@ void initKinect() {
 }
 
 void initComponents() {  
-  timeline = new Timeline();
+  timeline = new CyclicalTimeline();
   configMgr = new ConfigManager();  
   oscManager = new OscManager(configMgr.getOscSettings());
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
+  clipMgr = new SilhouetteClipManager(this);
   actionMgr = new ActionClipManager(timeline, configMgr.getActionClipSettings());  
-  clipMgr = new SilhouetteClipManager(this, timeline);
+
 }
 
 void initConfigSettings() {
@@ -300,6 +302,8 @@ boolean overlayVideo() {
   }
   
   resultImage.updatePixels();
+  
+  clip.tick(); // advance the time cursor on the current clip
   return true;
 }
 
