@@ -27,7 +27,7 @@ class SilhouetteClip extends Clip {
       filename = clipInfo.backgroundFilename;      
     }
     
-    timeline.setDuration( (int) movie.duration() );     
+    timeline.setDuration( (int) movie.duration() - 1);     
   }
     
   boolean hasSilhouette() {
@@ -54,13 +54,15 @@ class SilhouetteClip extends Clip {
   }
   
   void stop() {
-    if(silhouetteMovie != null) {
-      silhouetteMovie.stop();
+    if(started) {
+      if(silhouetteMovie != null) {
+        silhouetteMovie.stop();
+      }
+      if(backgroundMovie != null) {
+        backgroundMovie.stop();
+      }
+      started = false;
     }
-    if(backgroundMovie != null) {
-      backgroundMovie.stop();
-    }
-    started = false;
   }
   
   private SilhouetteClipInfo clipInfo;

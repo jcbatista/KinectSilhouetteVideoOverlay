@@ -32,8 +32,8 @@ class ActionClipManager {
     } 
   }
   
-  void schedule() {
-    period = timeline.getDuration() / frequency;
+  void definePeriod(int duration) {
+    period = duration / frequency;
 
   }
   
@@ -46,13 +46,15 @@ class ActionClipManager {
   private void reset() {
      currentClip = null;
      currentClipIndex = -1;
-     processSchedule();
+     schedule();
   }
     
   void initClips(ActionClipSettings settings) {
     for (int i=0; i < settings.clips.size(); i++) {
       String filename = settings.clips.get(i);
       Clip clip = new Clip(filename);
+      // TODO: we shouldn't have to set the clip duration
+      //clip.setDuration(settings.durations.get(i));
       clips.add(clip);
     }
   }
@@ -93,9 +95,15 @@ class ActionClipManager {
     }
   }
     
-  void next() {
+  void next() {       
+    if(currentClip!=null && currentClip.isStarted()) {
+      currentClip.tick();            
+      if(currentClip.hasCompleted()) {
+        currentClip.stop();
+      }           
+    }    
     if(timeline.hasTimeChanged()) {
-      handleTimeChanges();
+      handleTimeChanges();     
     }
   }
   
@@ -108,7 +116,7 @@ class ActionClipManager {
     return currentClip!=null && !currentClip.hasCompleted() ? currentClipIndex: -1;
   }
   
-  private void processSchedule() {
+  private void schedule() {
    int periodTimeStart = 0;
    int periodTimeEnd = 0;
    int clipTimeStart = 0;

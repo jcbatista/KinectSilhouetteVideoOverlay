@@ -33,7 +33,7 @@ class SilhouetteClipManager
     currentClip = clips.get(currentClipIndex);
   }
   
-  private void start(int clipIndex) {
+  private SilhouetteClip start(int clipIndex) {
     SilhouetteClip clip = clips.get(clipIndex);
     if(clip != null && !clip.isStarted()) {      
       println("*********** now playing clip " + clipIndex + " of " + clips.size());
@@ -43,6 +43,7 @@ class SilhouetteClipManager
       // ignore the case where the clip's already started
       println("clip couldn't be started ...");
     }
+    return clip;
   }
   
   private int nextClipIndex() {
@@ -53,7 +54,7 @@ class SilhouetteClipManager
   
     // TODO: add the prestart clip logic here!!!!  
     if(currentClip.almostCompleted()) {
-      start(nextClipIndex()); 
+      nextClip = start(nextClipIndex()); 
     } else if(currentClip.hasCompleted()) {     
       if(clips.size() > 0) {
         currentClip.stop(); // make sure the current clip is actually stopped
@@ -65,6 +66,15 @@ class SilhouetteClipManager
         }
       }
     } 
+    
+    if(currentClip!=null) {
+      currentClip.tick();
+    }
+    
+    if(nextClip!=null) {
+      nextClip.tick();
+    }
+      
     return currentClip;
   }
   
@@ -87,5 +97,6 @@ class SilhouetteClipManager
   private LinkedList<SilhouetteClip> clips;
   private int currentClipIndex = -1;
   private SilhouetteClip currentClip = null;
+  private SilhouetteClip nextClip = null;
   private PApplet applet = null;
 };

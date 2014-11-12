@@ -46,7 +46,7 @@ void setup() {
   clipMgr.add(clipList); 
   
   timeline.setDuration(clipMgr.getTotalDuration());
-  actionMgr.schedule();
+  actionMgr.definePeriod(timeline.getDuration());
   
   // display all the clips available for playback
   configMgr.listClips();
@@ -86,7 +86,6 @@ void initComponents() {
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
   clipMgr = new SilhouetteClipManager(this);
   actionMgr = new ActionClipManager(timeline, configMgr.getActionClipSettings());  
-
 }
 
 void initConfigSettings() {
@@ -250,8 +249,9 @@ void initResultImage() {
  * apply the action clip on the result image
  */
 void addActionClip(Clip clip) {
-  if(clip==null)
+  if(clip==null || !clip.isStarted()) {
     return;
+  }
   for (int i=0; i < clip.movie.pixels.length; i++) {
      int maskedColor = clip.movie.pixels[i] & colorMask;
      if (maskedColor != 0) {
@@ -303,7 +303,6 @@ boolean overlayVideo() {
   
   resultImage.updatePixels();
   
-  clip.tick(); // advance the time cursor on the current clip
   return true;
 }
 

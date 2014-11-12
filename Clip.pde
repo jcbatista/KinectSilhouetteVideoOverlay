@@ -14,7 +14,7 @@ class Clip {
     this.filename = filename;
     movie = loadMovie(filename);
     int duration = (int) movie.duration();
-    timeline.setDuration(duration );
+    timeline.setDuration(duration);
     started = false;
   }   
   
@@ -45,14 +45,17 @@ class Clip {
   }
   
   void stop() {
-     // HACK: minize slowdown between clips by actually not stop a clip
-     // movie.stop();
-     timeline.reset();
-     started = false;
-     
+     if(started) {       
+       movie.stop();
+       timeline.reset();
+       started = false;
+       println("clip filename=" + filename + " stopped!!");
+     }     
   }
   
-  boolean isStarted() { return started; }
+  boolean isStarted() { 
+    return started; 
+  }
   
   String getFilename() {
     return filename;
@@ -70,6 +73,10 @@ class Clip {
     return timeline.getDuration();
   }
   
+  void setDuration(int duration) {    
+    timeline.setDuration(duration);
+  }
+  
   protected Movie loadMovie(String filename) {
     if(filename==null || filename=="") {
       return null;
@@ -79,7 +86,7 @@ class Clip {
     // TODO: we might no longer need duration in the json.config file for action clips 
     // println(filename + " duration=" + (int) movie.duration() + "!!!!!!!!");    
     return movie; 
-  }
+  }  
  
   protected Timeline timeline; 
   protected boolean started;
