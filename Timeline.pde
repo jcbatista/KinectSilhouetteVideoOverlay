@@ -26,17 +26,6 @@ class Timeline {
     this.duration = duration;
   }
      
-  int getEllapsedTime() {
-    
-    if(duration==-1) {
-      return 0;
-    }
-    
-    double elapseTime = System.nanoTime() - runStartTime;
-    double seconds = (double)elapseTime / 1000000000d; 
-    return (int)seconds;
-  }
-  
   void tick() {
     timeChanged = false;
     currentTime = getEllapsedTime();    
@@ -72,6 +61,17 @@ class Timeline {
     timeChanged = true;
   }
   
+  private int getEllapsedTime() {
+    
+    if(duration==-1) {
+      return 0;
+    }
+    
+    double elapseTime = System.nanoTime() - runStartTime;
+    double seconds = (double)elapseTime / 1000000000d; 
+    return (int)seconds;
+  }
+    
   protected boolean timeChanged = false;
   protected int duration = 0;
   protected int currentTime = 0;
