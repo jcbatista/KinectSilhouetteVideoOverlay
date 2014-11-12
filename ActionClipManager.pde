@@ -33,19 +33,23 @@ class ActionClipManager {
   }
   
   void definePeriod(int duration) {
-    period = duration / frequency;   
+    if(frequency > 0 ){
+      period = duration / frequency;
+    } else {
+      period = 0;
+    }  
   }
   
   void start() {
-    if(shouldPlay()) {
       reset();
-    }
   }
   
-  private void reset() {
+  private void reset() {       
      currentClip = null;
      currentClipIndex = -1;
-     schedule();
+     if(shouldPlay()) {
+       schedule();
+     }
   }
     
   void initClips(ActionClipSettings settings) {
