@@ -391,7 +391,9 @@ void drawElapsedTime() {
   }
   textFont(font, 36);                
   fill(color(255,0,0));
-  text("Elapsed: " + str(timeline.getCurrentTime()), 10, 35);  
+  String fps = String.format("%.01f", frameRate);
+  String output = "Elapsed: " + str(timeline.getCurrentTime()) + "  fps:" + fps;
+  text(output , 10, 35);  
 }
 
 // Called every time a new frame is available to read
