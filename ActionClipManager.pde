@@ -33,8 +33,7 @@ class ActionClipManager {
   }
   
   void definePeriod(int duration) {
-    period = duration / frequency;
-
+    period = duration / frequency;   
   }
   
   void start() {
@@ -63,7 +62,7 @@ class ActionClipManager {
     println("*** Listing defined action clips ***");
     int count = 1;
     for (Clip clip : clips) {
-      println(count + ". action clip = "+ clip.getFilename() + " duration: " + clip.getDuration());
+      println(count + ". action clip = "+ clip.getFilename() + " duration: " + int(clip.getDuration()/1000));
       count++;
     }
     println("*** Done. ***");
@@ -77,7 +76,7 @@ class ActionClipManager {
     int clipIndex = -1; // index of the clip to start
     // clips are stored as a {clip index, time to start} value pair
     for(IntPair clipPair: scheduledClips) {
-      if(clipPair.second == timeline.getCurrentTime()) {
+      if(clipPair.second == timeline.getCurrentTimeInSec()) {
         clipIndex = clipPair.first;
         break;
       }
@@ -90,8 +89,10 @@ class ActionClipManager {
     if(clipIndexToStart != -1) {
       currentClipIndex = clipIndexToStart;
       currentClip = clips.get(currentClipIndex);
-      println("starting action clip index: " + currentClipIndex);        
-      currentClip.start();
+      if(!currentClip.isStarted()) {
+        println("starting action clip index: " + currentClipIndex);        
+        currentClip.start();
+      }
     }
   }
     
@@ -126,7 +127,7 @@ class ActionClipManager {
      Clip clip = clips.get(clipIndex);
      periodTimeStart = i*period;
      periodTimeEnd = i*period + period;
-     clipTimeStart = int(random(periodTimeStart, periodTimeEnd - clip.getDuration()));
+     clipTimeStart = int(random(periodTimeStart, periodTimeEnd - clip.getDuration()) / 1000);
      println( "action clip index: " + clipIndex + " scheduled to start in " + clipTimeStart + " seconds ...");
      scheduledClips.add(new IntPair(clipIndex, clipTimeStart));
    }

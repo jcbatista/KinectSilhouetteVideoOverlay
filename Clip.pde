@@ -13,7 +13,7 @@ class Clip {
     timeline = new Timeline();
     this.filename = filename;
     movie = loadMovie(filename);
-    int duration = (int) movie.duration();
+    int duration = (int) (movie.duration() * 1000); // in ms
     timeline.setDuration(duration);
     started = false;
   }   
@@ -29,15 +29,17 @@ class Clip {
 
    int currentTime = timeline.getCurrentTime();
    int duration = timeline.getDuration();
-   // TODO: the clip "pre-start time should'nt be hardcoded
-   return currentTime >= (duration - 4) && currentTime <= duration;
+   // TODO: the clip "crossFade time should'nt be hardcoded
+   return currentTime >= (duration - 0) && currentTime <= duration;
  }
  
   void start() {
-    movie.play();
-    movie.volume(0);
-    timeline.start();
-    started = true;
+    if(!started) {
+      movie.play();
+      movie.volume(0);
+      timeline.start();
+      started = true;
+    }
   }
   
   void tick() {

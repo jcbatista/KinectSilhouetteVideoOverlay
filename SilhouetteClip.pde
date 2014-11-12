@@ -27,7 +27,7 @@ class SilhouetteClip extends Clip {
       filename = clipInfo.backgroundFilename;      
     }
     
-    timeline.setDuration( (int) movie.duration() - 1);     
+    timeline.setDuration( (int) (movie.duration() * 1000));     
   }
     
   boolean hasSilhouette() {
@@ -39,18 +39,20 @@ class SilhouetteClip extends Clip {
   }
   
   void start() {
-    if(hasSilhouette()) {
-      silhouetteMovie.play();
-      silhouetteMovie.volume(0);
+    if(!started) {
+      if(hasSilhouette()) {
+        silhouetteMovie.play();
+        silhouetteMovie.volume(0);
+      }
+      
+      if(hasBackground()) {
+        backgroundMovie.play();
+        backgroundMovie.volume(0);    
+      }
+ 
+      timeline.start();
+      started = true;
     }
-    
-    if(hasBackground()) {
-      backgroundMovie.play();
-      backgroundMovie.volume(0);    
-    }
-
-    timeline.start();
-    started = true;
   }
   
   void stop() {

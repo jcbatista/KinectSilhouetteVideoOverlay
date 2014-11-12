@@ -22,13 +22,16 @@ class Timeline {
     reset();    
   }
   
+  /*
+   * set the duration is milliseconds
+   */
   void setDuration(int duration) {
     this.duration = duration;
   }
      
   void tick() {
     timeChanged = false;
-    currentTime = getEllapsedTime();    
+    currentTime = getEllapsedTime();   
     if(currentTime != previousTime) {
       timeChanged = true;
       previousTime = currentTime;
@@ -45,6 +48,10 @@ class Timeline {
   
   int getCurrentTime() {
     return currentTime;
+  }
+  
+  int getCurrentTimeInSec() {
+    return int(currentTime/1000);
   }
   
   boolean hasCompleted() {  
@@ -68,8 +75,8 @@ class Timeline {
     }
     
     double elapseTime = System.nanoTime() - runStartTime;
-    double seconds = (double)elapseTime / 1000000000d; 
-    return (int)seconds;
+    double ms = (double)elapseTime / 1000000d;//1000000000d;     
+    return (int)ms;
   }
     
   protected boolean timeChanged = false;
