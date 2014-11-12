@@ -48,7 +48,9 @@ class SilhouetteClip extends Clip {
       backgroundMovie.volume(0);
     }
     
-    duration = (int) movie.duration();
+    // TODO START REMOVE THIS HACK
+    duration = (int) (movie.duration() - 1);
+    // TODO END REMOVE THIS HACK
     startTime = System.nanoTime();
     started = true;
   }
