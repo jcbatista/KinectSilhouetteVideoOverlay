@@ -48,7 +48,7 @@ class SilhouetteClip extends Clip {
       backgroundMovie.play();
       backgroundMovie.volume(0);    
     }
-    
+
     timeline.start();
     started = true;
   }
