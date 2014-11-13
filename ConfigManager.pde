@@ -113,13 +113,9 @@ class ConfigManager {
 
     settings.frequency = actionData.getInt("frequency");
     JSONArray clips = actionData.getJSONArray("clips");
-    
     for(int i=0; i < clips.size(); i++) {
-      JSONArray clipTuple = clips.getJSONArray(i);
-      String clipName = clipTuple.getString(0); 
-      int duration = clipTuple.getInt(1);  
+      String clipName = clips.getString(i);
       settings.clips.append(clipName);
-      settings.durations.append(duration);
     }
     return settings;
   }

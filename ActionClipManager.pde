@@ -2,10 +2,8 @@
 class ActionClipSettings { 
   ActionClipSettings() {
     clips = new StringList();
-    durations = new IntList(); // Note: clips and durations index must match
   }
   StringList clips;
-  IntList durations;
   int frequency;
 }
 
@@ -56,8 +54,6 @@ class ActionClipManager {
     for (int i=0; i < settings.clips.size(); i++) {
       String filename = settings.clips.get(i);
       Clip clip = new Clip(filename);
-      // TODO: we shouldn't have to set the clip duration
-      //clip.setDuration(settings.durations.get(i));
       clips.add(clip);
     }
   }
