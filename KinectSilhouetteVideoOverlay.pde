@@ -31,6 +31,7 @@ final int WIDTH  = 640;  // WIDTH = 1280;
 final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
 
+
 void setup() {  
   size(WIDTH, HEIGHT); 
 
@@ -53,6 +54,8 @@ void setup() {
   
   // misc stuff
   font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on 
+  
+  println("crossfade setting = " + configMgr.getCrossfade());
 }
 
 void initKinect() {
@@ -82,8 +85,8 @@ void initKinect() {
 void initComponents() {  
   timeline = new CyclicalTimeline();
   configMgr = new ConfigManager();  
-  oscManager = new OscManager(configMgr.getOscSettings());
-  silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());
+  oscManager = new OscManager(configMgr.getOscSettings());  
+  silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());   
   clipMgr = new SilhouetteClipManager(this);
   actionMgr = new ActionClipManager(timeline, configMgr.getActionClipSettings());  
 }
@@ -265,21 +268,13 @@ void addActionClip(Clip clip) {
   resultImage.updatePixels();
 }
 
-/*
- * process both silhouette and background video content on the result image
- */
-boolean overlayVideo() {
-  SilhouetteClip clip = clipMgr.getCurrent();
-  
-  if(clip!=previousClip) {
-    previousClip = clip;
-    if(clip==null) {
-      println("clip has ended!!!");
-    }
-  }
-  
+float getCrossfadeRatio(Clip clip) {
+  return clipMgr.getCrossfadePosition() / (frameRate * clip.getCrossfade()/1000);
+}
+
+boolean isClipValid(SilhouetteClip clip) {
   if(clip==null) {
-    return false; // no clip to overlay
+    return false;
   }
   
   if(clip.hasSilhouette() && resultImage.pixels.length!=clip.silhouetteMovie.pixels.length) {
@@ -292,12 +287,55 @@ boolean overlayVideo() {
     return false;
   }
   
+  return true;
+}
+
+/*
+ * process both silhouette and background video content on the result image
+ */
+boolean overlayVideo() {
+  SilhouetteClip currentClip = clipMgr.getCurrent();
+  SilhouetteClip nextClip = clipMgr.getNext();
+    
+  if(!isClipValid(currentClip)) {
+    return false; 
+  }
+  
+  int corssfadePos = clipMgr.getCrossfadePosition();
+  boolean shouldFade = nextClip!=null && corssfadePos > 0 ; 
+  float ratio = getCrossfadeRatio(currentClip);
+
+    if(corssfadePos > 0){
+      println("crossfade pos:" + clipMgr.getCrossfadePosition()+ " ratio = " + ratio);
+    }
+  
+  if(shouldFade && !isClipValid(nextClip)) {
+    println("warning: skipping nextClip ...");
+    shouldFade = false;
+  }
+  
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
     if (maskedColor != 0) {
-      resultImage.pixels[i] = clip.hasSilhouette() ? clip.silhouetteMovie.pixels[i] : color(0,0,0);
+      // handle silhouette
+      if(!shouldFade) {
+        resultImage.pixels[i] = currentClip.hasSilhouette() ? currentClip.silhouetteMovie.pixels[i] : color(0,0,0);
+      } else {
+        // handle fade
+        color source = currentClip.hasSilhouette() ? currentClip.silhouetteMovie.pixels[i] : color(0,0,0);
+        color target = nextClip.hasSilhouette() ? nextClip.silhouetteMovie.pixels[i] : color(0,0,0);        
+        resultImage.pixels[i] = lerpColor(source, target, ratio);
+      }
     } else {
-      resultImage.pixels[i] = clip.hasBackground() ? clip.backgroundMovie.pixels[i] : color(0,0,0);
+      // handle background
+      if(!shouldFade) {
+        resultImage.pixels[i] = currentClip.hasBackground() ? currentClip.backgroundMovie.pixels[i] : color(0,0,0);
+      } else {
+        // handle fade
+        color source = currentClip.hasBackground() ? currentClip.backgroundMovie.pixels[i] : color(0,0,0);
+        color target = nextClip.hasBackground() ? nextClip.backgroundMovie.pixels[i] : color(0,0,0);
+        resultImage.pixels[i] = lerpColor(source, target, ratio);
+      }
     }
   }
   
@@ -439,7 +477,6 @@ Movie globalLoadMovie(String filename) {
 private Timeline timeline;
 private SimpleOpenNI kinect; // Kinect API
 private boolean hasUserMap = false;
-private Clip previousClip = null; // TODO: might consider changing previousClip related logic
 private SilhouetteClipManager clipMgr; 
 private ConfigManager configMgr;
 private ActionClipManager actionMgr;

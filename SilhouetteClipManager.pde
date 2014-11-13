@@ -37,7 +37,7 @@ class SilhouetteClipManager
     SilhouetteClip clip = clips.get(clipIndex);
     if(clip != null && !clip.isStarted()) {      
       println("*********** now playing clip " + clipIndex + " of " + clips.size());
-      clip.start();
+      clip.start();      
       started = true;
     } else if(clip == null) {
       // ignore the case where the clip's already started
@@ -51,16 +51,16 @@ class SilhouetteClipManager
   }
   
   SilhouetteClip getCurrent() {
-  
-    // TODO: add the prestart clip logic here!!!!  
-    if(currentClip.almostCompleted()) {
-      nextClip = start(nextClipIndex()); 
+    crossfadePosition = currentClip.almostCompleted() ? ++crossfadePosition: 0;
+    if(crossfadePosition==1) {
+      nextClip = start(nextClipIndex());
     } else if(currentClip.hasCompleted()) {     
       if(clips.size() > 0) {
+        crossfadePosition = 0;
         currentClip.stop(); // make sure the current clip is actually stopped
         // cycle to the next clip
         currentClipIndex = nextClipIndex();  
-        currentClip =  clips.get(currentClipIndex);
+        currentClip = clips.get(currentClipIndex);
         if(!currentClip.isStarted()) {
           start(currentClipIndex); 
         }
@@ -74,8 +74,19 @@ class SilhouetteClipManager
     if(nextClip!=null) {
       nextClip.tick();
     }
-      
+    /* 
+    if(crossfadePosition>0){
+      println("crossfade postion = " + crossfadePosition);
+    }
+    */
     return currentClip;
+  }
+  
+  SilhouetteClip getNext() {
+    if(crossfadePosition==0) {      
+      return null;
+    } 
+    return nextClip;
   }
   
   int getCurrentIndex() {
@@ -90,8 +101,13 @@ class SilhouetteClipManager
     return total;
   }
   
-  boolean isStarted() { return started; }
+  int getCrossfadePosition() {
+    return crossfadePosition;
+  }
   
+  boolean isStarted() { return started; }
+  private boolean startCrossfade;
+  private int crossfadePosition = 0;
   private boolean started = false;
   private String dataPath;
   private LinkedList<SilhouetteClip> clips;

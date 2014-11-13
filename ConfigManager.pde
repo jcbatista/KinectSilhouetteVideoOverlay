@@ -33,6 +33,8 @@ class ConfigManager {
         }
       }
 
+      // for now, each clip has the same crossfade value
+      clipInfo.crossfade = getCrossfade();
       list.add(clipInfo);
     }
     return list; 
@@ -79,6 +81,10 @@ class ConfigManager {
   
   int getSmoothSilhouette() {
     return configJSON.getInt("smoothSilhouette");
+  }
+  
+  int getCrossfade() {
+    return configJSON.getInt("crossfade");
   }
 
   SilhouetteCacheData getSilhouetteCacheSettings() {

@@ -6,31 +6,41 @@ class Clip {
   Clip()
   {
     timeline = new Timeline();
+    crossfade = 0;
   }
   
   Clip(String filename)
-  {
+  {    
     timeline = new Timeline();
     this.filename = filename;
     movie = loadMovie(filename);
     int duration = (int) (movie.duration() * 1000); // in ms
     timeline.setDuration(duration);
     started = false;
+    crossfade = 0;
   }   
   
+  int getCrossfade() {
+    return crossfade;
+  }  
+  
+  void setCrossfade(int value) {
+    crossfade = value;
+  }  
+
  boolean hasCompleted() {
    return timeline.hasCompleted();
  }
  
   boolean almostCompleted() {
-   if(timeline.getDuration()==-1) {
+    // TODO refactor crossfade
+   if(timeline.getDuration()==-1 || crossfade==0) {
      return false;
    }
 
    int currentTime = timeline.getCurrentTime();
    int duration = timeline.getDuration();
-   // TODO: the clip "crossFade time should'nt be hardcoded
-   return currentTime >= (duration - 0) && currentTime <= duration;
+   return currentTime >= (duration - crossfade) && currentTime <= duration;
  }
  
   void start() {
@@ -90,6 +100,7 @@ class Clip {
     return movie; 
   }  
  
+  protected int crossfade;
   protected Timeline timeline; 
   protected boolean started;
   protected String filename;
