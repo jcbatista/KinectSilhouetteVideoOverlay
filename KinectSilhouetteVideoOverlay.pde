@@ -133,7 +133,7 @@ void draw() {
       resultImage.updatePixels();
       image(resultImage, 0, 0, scaledWidth, scaledHeight);
 
-      //processCenterOfMass();      
+      processCenterOfMass();      
       drawElapsedTime();
       timeline.tick();      
     } else {
@@ -159,6 +159,9 @@ void processSilhouette() {
 void displayCenterOfMass(PVector position) {
   if(configMgr.showCenterOfMass()) {
     fill(255, 0, 0);
+    // adjust position in re-scaled image
+    float posx = position.x * scaledWidth / KINECT_WIDTH;
+    float posy = position.y * scaledHeight/ KINECT_HEIGHT;
     ellipse(position.x, position.y, 25, 25);
   }
 }
