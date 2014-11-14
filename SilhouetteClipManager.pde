@@ -90,7 +90,7 @@ class SilhouetteClipManager
   }
   
   int getCurrentIndex() {
-    return currentClipIndex;
+    return currentClip!=null && currentClip.almostCompleted() ? nextClipIndex(): currentClipIndex;
   }
   
   int getTotalDuration() {
