@@ -10,10 +10,10 @@ class CyclicalTimeline extends Timeline {
     super.setDuration(duration);
     println("main timeline duration set to " + duration);
   }
-  
 }  
 
 class Timeline {  
+  
   Timeline() {
     duration = -1; 
   }
@@ -31,10 +31,12 @@ class Timeline {
      
   void tick() {
     timeChanged = false;
-    currentTime = getEllapsedTime();   
-    if(currentTime != previousTime) {
+    currentTime = getEllapsedTime(); 
+    
+    currentTimeSlice = (int)((double)currentTime / granularity);
+    if(currentTimeSlice != previousTimeSlice) {
       timeChanged = true;
-      previousTime = currentTime;
+      previousTimeSlice = currentTimeSlice;
     }           
   }
   
@@ -54,7 +56,7 @@ class Timeline {
     return int(currentTime/1000);
   }
   
-  boolean hasCompleted() {  
+  boolean hasCompleted() {
     if(duration==-1) {
       return false;
     }  
@@ -64,8 +66,13 @@ class Timeline {
   void reset() {
     runStartTime = System.nanoTime();
     currentTime = 0;
-    previousTime = 0;
+    currentTimeSlice = 0;
+    previousTimeSlice = 0;
     timeChanged = true;
+  }
+  
+  void setGranularity(int value) {
+    this.granularity = value;
   }
   
   private int getEllapsedTime() {
@@ -78,10 +85,12 @@ class Timeline {
     double ms = (double)elapseTime / 1000000d;//1000000000d;     
     return (int)ms;
   }
-    
+   
+  protected double granularity = 1;
   protected boolean timeChanged = false;
   protected int duration = 0;
+  protected int currentTimeSlice = 0;
+  protected int previousTimeSlice = 0; 
   protected int currentTime = 0;
-  protected int previousTime = 0;
   protected double runStartTime = 0;     
 }

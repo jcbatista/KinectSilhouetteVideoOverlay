@@ -45,6 +45,7 @@ void setup() {
   clipMgr.add(clipList); 
   
   timeline.setDuration(clipMgr.getTotalDuration());
+  timeline.setGranularity(1000); // 1 second
   actionMgr.definePeriod(timeline.getDuration());
   
   // display all the clips available for playback
