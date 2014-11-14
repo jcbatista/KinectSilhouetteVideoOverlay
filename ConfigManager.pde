@@ -96,6 +96,16 @@ class ConfigManager {
     return data;
   }
   
+  int getScaleHeight() {
+    JSONObject scaleJSON = configJSON.getJSONObject("scale");
+    return scaleJSON.getInt("height");
+  }
+  
+  int getScaleWidth() {
+    JSONObject scaleJSON = configJSON.getJSONObject("scale");
+    return scaleJSON.getInt("width");
+  }
+  
   OscConfigData getOscSettings() {
     OscConfigData data = new OscConfigData();
     data.name = getName();

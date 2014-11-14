@@ -31,10 +31,8 @@ final int WIDTH  = 640;  // WIDTH = 1280;
 final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
 
-
 void setup() {  
-  size(WIDTH, HEIGHT); 
-
+  
   // set black background for full screen mode
   ((JFrame) frame).getContentPane().setBackground(java.awt.Color.BLACK);  
   
@@ -56,6 +54,9 @@ void setup() {
   font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on 
   
   println("crossfade setting = " + configMgr.getCrossfade());
+  scaledWidth = configMgr.getScaleWidth();
+  scaledHeight = configMgr.getScaleHeight();
+  size(scaledWidth, configMgr.getScaleHeight());
 }
 
 void initKinect() {
@@ -130,15 +131,15 @@ void draw() {
       
       // display rendered image
       resultImage.updatePixels();
-      image(resultImage, 0, 0);
+      image(resultImage, 0, 0, scaledWidth, scaledHeight);
 
-      processCenterOfMass();      
+      //processCenterOfMass();      
       drawElapsedTime();
       timeline.tick();      
     } else {
       // get the Kinect color image
       PImage rgbImage = kinect.rgbImage();
-      image(rgbImage, 0, 0);
+      image(rgbImage, 0, 0, scaledWidth, scaledHeight);
     }
 }
 
@@ -469,11 +470,11 @@ Movie globalLoadMovie(String filename) {
   return new Movie(this, dataPath("") + "/clips/" + filename);
 }
 
-
 /*
  * Members
  */
-
+private int scaledHeight = KINECT_HEIGHT;
+private int scaledWidth = KINECT_WIDTH;
 private Timeline timeline;
 private SimpleOpenNI kinect; // Kinect API
 private boolean hasUserMap = false;
