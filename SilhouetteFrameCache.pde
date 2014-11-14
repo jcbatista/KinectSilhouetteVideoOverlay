@@ -50,6 +50,7 @@ class SilhouetteFrame {
 class SilhouetteFrameCache {
 
   SilhouetteFrameCache(SilhouetteCacheData data) {
+    timeline = new Timeline();
     cache = new LinkedList<SilhouetteFrame>();
     enabled = data.enabled;
     minFrames = data.minFrames;
@@ -69,6 +70,8 @@ class SilhouetteFrameCache {
     if(!playbackReady && canPlayback()) {
       println("SilhouetteFrameCache ready for playback ...");
       playbackReady = true;
+      int frameRateGranularity = int(1000/frameRate);
+      timeline.setGranularity(frameRateGranularity);
     }
   }
   
@@ -81,11 +84,12 @@ class SilhouetteFrameCache {
   }
   
   void next() {
-        int size = cache.size();
-        if(enabled && size > 0) {
-          currentFrameIndex++;
-          currentFrameIndex = (currentFrameIndex + 1) % size;
-        }
+    int size = cache.size();
+    timeline.tick();
+    if(enabled && size > 0 && timeline.hasTimeChanged()) {
+      currentFrameIndex++;
+      currentFrameIndex = (currentFrameIndex + 1) % size;
+    }
   }
   
   SilhouetteFrame getLast() {
@@ -106,7 +110,8 @@ class SilhouetteFrameCache {
     // println("currentFrameIndex=" + currentFrameIndex + " of " + size);
     return frame;
   }
-     
+  
+  private Timeline timeline;
   private boolean enabled = false;
   private boolean playbackReady = false;
   private LinkedList<SilhouetteFrame> cache;

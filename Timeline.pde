@@ -90,7 +90,7 @@ class Timeline {
   protected boolean timeChanged = false;
   protected int duration = 0;
   protected int currentTimeSlice = 0;
-  protected int previousTimeSlice = 0; 
+  protected int previousTimeSlice = -1; 
   protected int currentTime = 0;
   protected double runStartTime = 0;     
 }
