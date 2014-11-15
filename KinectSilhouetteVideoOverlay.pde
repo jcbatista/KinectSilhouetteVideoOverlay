@@ -172,9 +172,14 @@ void processCenterOfMass()
   if(usingFrameCache) {
     // were using cached frames, send the cached meta data using OSC
     SilhouetteFrame frame = silhouetteCache.getCurrent();
-    for(MetaData metaData: frame.getMetaDataList()) {
-      oscManager.send(clipMgr.getCurrentIndex(), metaData.totalUsers,  metaData.userIndex, metaData.position, actionMgr.getCurrentIndex());
-      displayCenterOfMass(metaData.position);
+    if(frame.getMetaDataList().size()>0) {    
+      for(MetaData metaData: frame.getMetaDataList()) {
+        oscManager.send(clipMgr.getCurrentIndex(), metaData.totalUsers,  metaData.userIndex, metaData.position, actionMgr.getCurrentIndex());
+        displayCenterOfMass(metaData.position);
+      }
+    } else {
+      // cached frame has not metadata
+      oscManager.send(clipMgr.getCurrentIndex(), 0, 0, new PVector(), actionMgr.getCurrentIndex());
     }
   } else {
     kinect.getUsers(userList);
@@ -195,6 +200,9 @@ void processCenterOfMass()
         if(frame!=null) {
           frame.addMetaData(nbUsers, i, position);
         }
+      } else {
+        // keep sending OSC data, but invalidate the position, position should be ignored in the receiver's end        
+        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, new PVector(), actionMgr.getCurrentIndex());
       }
     }
   }

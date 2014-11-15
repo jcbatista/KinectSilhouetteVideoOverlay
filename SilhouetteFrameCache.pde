@@ -91,7 +91,7 @@ class SilhouetteFrameCache {
     this.clock.tick();
     /*
     if(clock.hasTimeChanged()) {
-      println("framecache time change at " + clock.getCurrentTimeInSec());
+      println("framecache time changed at " + clock.getCurrentTimeInSec());
     }
     */
     if(enabled && size > 0 && clock.hasTimeChanged()) {
