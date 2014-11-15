@@ -19,7 +19,7 @@ class Timeline {
   }
   
   void start() {
-    reset();    
+    reset();
   }
   
   /*
@@ -28,15 +28,15 @@ class Timeline {
   void setDuration(int duration) {
     this.duration = duration;
   }
-     
+          
   void tick() {
     timeChanged = false;
     currentTime = getEllapsedTime(); 
-    
     currentTimeSlice = (int)((double)currentTime / granularity);
+
     if(currentTimeSlice != previousTimeSlice) {
-      timeChanged = true;
       previousTimeSlice = currentTimeSlice;
+      timeChanged = true;      
     }           
   }
   
@@ -76,19 +76,14 @@ class Timeline {
   }
   
   private int getEllapsedTime() {
-    
-    if(duration==-1) {
-      return 0;
-    }
-    
     double elapseTime = System.nanoTime() - runStartTime;
-    double ms = (double)elapseTime / 1000000d;//1000000000d;     
+    double ms = (double)elapseTime / 1000000d; //1000000000d;     
     return (int)ms;
   }
    
   protected double granularity = 1;
   protected boolean timeChanged = false;
-  protected int duration = 0;
+  protected int duration = -1;
   protected int currentTimeSlice = 0;
   protected int previousTimeSlice = -1; 
   protected int currentTime = 0;

@@ -309,11 +309,11 @@ boolean overlayVideo() {
   int corssfadePos = clipMgr.getCrossfadePosition();
   boolean shouldFade = nextClip!=null && corssfadePos > 0 ; 
   float ratio = getCrossfadeRatio(currentClip);
-
-    if(corssfadePos > 0){
-      println("crossfade pos:" + clipMgr.getCrossfadePosition()+ " ratio = " + ratio);
-    }
-  
+/*
+  if(corssfadePos > 0){
+    println("crossfade pos:" + clipMgr.getCrossfadePosition()+ " ratio = " + ratio);
+  }
+*/  
   if(shouldFade && !isClipValid(nextClip)) {
     println("warning: skipping nextClip ...");
     shouldFade = false;
@@ -435,7 +435,7 @@ void drawElapsedTime() {
   textFont(font, 36);                
   fill(color(255,0,0));
   String fps = String.format("%.01f", frameRate);
-  String output = "Elapsed: " + str(timeline.getCurrentTimeInSec()) + "  fps:" + fps;
+  String output = "Elapsed: " + str(timeline.getCurrentTimeInSec()) + "  fps: " + fps;
   text(output , 10, 35);  
 }
 
