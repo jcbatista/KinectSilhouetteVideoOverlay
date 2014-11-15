@@ -44,9 +44,9 @@ void setup() {
   LinkedList<SilhouetteClipInfo> clipList = configMgr.getClips();
   clipMgr.add(clipList); 
   
-  timeline.setDuration(clipMgr.getTotalDuration());
-  timeline.setGranularity(1000); // 1 second
-  actionMgr.definePeriod(timeline.getDuration());
+  clock.setDuration(clipMgr.getTotalDuration());
+  clock.setGranularity(1000); // 1 second
+  actionMgr.definePeriod(clock.getDuration());
   
   // display all the clips available for playback
   configMgr.listClips();
@@ -85,12 +85,12 @@ void initKinect() {
 }
 
 void initComponents() {  
-  timeline = new CyclicalTimeline();
+  clock = new CyclicalClock();
   configMgr = new ConfigManager();  
   oscManager = new OscManager(configMgr.getOscSettings());  
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());   
   clipMgr = new SilhouetteClipManager(this);
-  actionMgr = new ActionClipManager(timeline, configMgr.getActionClipSettings());  
+  actionMgr = new ActionClipManager(clock, configMgr.getActionClipSettings());  
 }
 
 void initConfigSettings() {
@@ -107,7 +107,7 @@ void draw() {
       if(shouldOverlayVideo && !clipMgr.isStarted()) {
         clipMgr.start();
         actionMgr.start();
-        timeline.start();
+        clock.start();
       }
                 
       loadPixels();
@@ -136,7 +136,7 @@ void draw() {
 
       processCenterOfMass();      
       drawElapsedTime();
-      timeline.tick();      
+      clock.tick();      
     } else {
       // get the Kinect color image
       PImage rgbImage = kinect.rgbImage();
@@ -435,7 +435,7 @@ void drawElapsedTime() {
   textFont(font, 36);                
   fill(color(255,0,0));
   String fps = String.format("%.01f", frameRate);
-  String output = "Elapsed: " + str(timeline.getCurrentTimeInSec()) + "  fps: " + fps;
+  String output = "Elapsed: " + str(clock.getCurrentTimeInSec()) + "  fps: " + fps;
   text(output , 10, 35);  
 }
 
@@ -479,7 +479,7 @@ Movie globalLoadMovie(String filename) {
  */
 private int scaledHeight = KINECT_HEIGHT;
 private int scaledWidth = KINECT_WIDTH;
-private Timeline timeline;
+private Clock clock;
 private SimpleOpenNI kinect; // Kinect API
 private boolean hasUserMap = false;
 private SilhouetteClipManager clipMgr; 

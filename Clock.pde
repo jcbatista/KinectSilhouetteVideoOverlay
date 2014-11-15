@@ -1,4 +1,4 @@
-class CyclicalTimeline extends Timeline {
+class CyclicalClock extends Clock {
   void tick(){
     super.tick();
     if(currentTime > duration) {
@@ -8,13 +8,13 @@ class CyclicalTimeline extends Timeline {
   
   void setDuration(int duration) {        
     super.setDuration(duration);
-    println("main timeline duration set to " + duration);
+    println("main clock duration set to " + duration);
   }
 }  
 
-class Timeline {  
+class Clock {  
   
-  Timeline() {
+  Clock() {
     duration = -1; 
   }
   

@@ -13,7 +13,7 @@ class SilhouetteClip extends Clip {
   
   SilhouetteClip(SilhouetteClipInfo clipInfo)
   {
-    timeline = new Timeline();
+    clock = new Clock();
     this.clipInfo = clipInfo;
     this.crossfade = clipInfo.crossfade; // adjust crossfade propertie in the baseclass
     silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
@@ -28,7 +28,7 @@ class SilhouetteClip extends Clip {
       filename = clipInfo.backgroundFilename;      
     }
     int duration = int (movie.duration() * 1000 - 300);
-    timeline.setDuration( duration );     
+    clock.setDuration( duration );     
   }
     
   boolean hasSilhouette() {
@@ -51,7 +51,7 @@ class SilhouetteClip extends Clip {
         backgroundMovie.volume(0);    
       }
  
-      timeline.start();
+      clock.start();
       started = true;
     }
   }

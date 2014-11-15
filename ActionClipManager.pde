@@ -18,8 +18,8 @@ class IntPair {
 
 class ActionClipManager {
   
-  ActionClipManager(Timeline timeline, ActionClipSettings settings) {
-    this.timeline = timeline;
+  ActionClipManager(Clock clock, ActionClipSettings settings) {
+    this.clock = clock;
     clips = new LinkedList<Clip>();
     scheduledClips = new LinkedList<IntPair>();
     frequency = settings.frequency;   
@@ -76,7 +76,7 @@ class ActionClipManager {
     int clipIndex = -1; // index of the clip to start
     // clips are stored as a {clip index, time to start} value pair
     for(IntPair clipPair: scheduledClips) {
-      if(clipPair.second == timeline.getCurrentTimeInSec()) {
+      if(clipPair.second == clock.getCurrentTimeInSec()) {
         clipIndex = clipPair.first;
         break;
       }
@@ -103,7 +103,7 @@ class ActionClipManager {
         currentClip.stop();
       }           
     }    
-    if(timeline.hasTimeChanged()) {
+    if(clock.hasTimeChanged()) {
       handleTimeChanges();     
     }
   }
@@ -134,7 +134,7 @@ class ActionClipManager {
  }
   
   
-  private Timeline timeline = null;
+  private Clock clock = null;
   private LinkedList<IntPair> scheduledClips; // list of <clipIndex, start time (in seconds)> for a given run length
  
   private int currentClipIndex = -1;

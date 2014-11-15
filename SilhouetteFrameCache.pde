@@ -50,7 +50,7 @@ class SilhouetteFrame {
 class SilhouetteFrameCache {
 
   SilhouetteFrameCache(SilhouetteCacheData data) {
-    this.timeline = new Timeline();
+    this.clock = new Clock();
     cache = new LinkedList<SilhouetteFrame>();
     enabled = data.enabled;
     minFrames = data.minFrames;
@@ -72,9 +72,9 @@ class SilhouetteFrameCache {
 
       // TODO: figure out why we need the frameRate / 2 slowdown threshold
       int frameRateGranularity =  1000 / ceil(frameRate / 2);
-      this.timeline.setGranularity(frameRateGranularity);
-      println("************* SilhouetteFrameCache ready for playback, framerate: "+ int(frameRate) +" fps, timeline ganularity: " + frameRateGranularity +"ms *************");
-      this.timeline.start();
+      this.clock.setGranularity(frameRateGranularity);
+      println("************* SilhouetteFrameCache ready for playback, framerate: "+ int(frameRate) +" fps, clock ganularity: " + frameRateGranularity +"ms *************");
+      this.clock.start();
     }
   }
   
@@ -88,13 +88,13 @@ class SilhouetteFrameCache {
   
   void next() {
     int size = cache.size();
-    this.timeline.tick();
+    this.clock.tick();
     /*
-    if(timeline.hasTimeChanged()) {
-      println("framecache time change at " + timeline.getCurrentTimeInSec());
+    if(clock.hasTimeChanged()) {
+      println("framecache time change at " + clock.getCurrentTimeInSec());
     }
     */
-    if(enabled && size > 0 && timeline.hasTimeChanged()) {
+    if(enabled && size > 0 && clock.hasTimeChanged()) {
       currentFrameIndex++;
       currentFrameIndex = (currentFrameIndex + 1) % size;
     }
@@ -119,7 +119,7 @@ class SilhouetteFrameCache {
     return frame;
   }
   
-  private Timeline timeline;
+  private Clock clock;
   private boolean enabled = false;
   private boolean playbackReady = false;
   private LinkedList<SilhouetteFrame> cache;

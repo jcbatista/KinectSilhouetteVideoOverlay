@@ -5,17 +5,17 @@ class Clip {
   
   Clip()
   {
-    timeline = new Timeline();
+    clock = new Clock();
     crossfade = 0;
   }
   
   Clip(String filename)
   {    
-    timeline = new Timeline();
+    clock = new Clock();
     this.filename = filename;
     movie = loadMovie(filename);
     int duration = (int) (movie.duration() * 1000); // in ms
-    timeline.setDuration(duration);
+    clock.setDuration(duration);
     started = false;
     crossfade = 0;
   }   
@@ -29,17 +29,17 @@ class Clip {
   }  
 
  boolean hasCompleted() {
-   return timeline.hasCompleted();
+   return clock.hasCompleted();
  }
  
   boolean almostCompleted() {
     // TODO refactor crossfade
-   if(timeline.getDuration()==-1 || crossfade==0) {
+   if(clock.getDuration()==-1 || crossfade==0) {
      return false;
    }
 
-   int currentTime = timeline.getCurrentTime();
-   int duration = timeline.getDuration();
+   int currentTime = clock.getCurrentTime();
+   int duration = clock.getDuration();
    return currentTime >= (duration - crossfade) && currentTime <= duration;
  }
  
@@ -47,19 +47,19 @@ class Clip {
     if(!started) {
       movie.play();
       movie.volume(0);
-      timeline.start();
+      clock.start();
       started = true;
     }
   }
   
   void tick() {
-    timeline.tick();
+    clock.tick();
   }
   
   void stop() {
      if(started) {       
        movie.stop();
-       timeline.reset();
+       clock.reset();
        started = false;
        println("clip filename=" + filename + " stopped!!");
      }     
@@ -78,15 +78,15 @@ class Clip {
   }
   
   int getDuration() {
-    if(timeline.getDuration()==-1) {
+    if(clock.getDuration()==-1) {
       println("warning: duration not set for clip name=" + filename);
       return 0;
     }
-    return timeline.getDuration();
+    return clock.getDuration();
   }
   
   void setDuration(int duration) {    
-    timeline.setDuration(duration);
+    clock.setDuration(duration);
   }
   
   protected Movie loadMovie(String filename) {
@@ -101,7 +101,7 @@ class Clip {
   }  
  
   protected int crossfade;
-  protected Timeline timeline; 
+  protected Clock clock; 
   protected boolean started;
   protected String filename;
   protected Movie movie;
