@@ -64,8 +64,15 @@ class LiveClip extends SilhouetteClip {
   }
   
   protected Capture capture() {
-    Capture capture = new Capture(application, KINECT_WIDTH, KINECT_HEIGHT);
-    capture.start(); 
+    Capture capture = null;
+    try { 
+      capture = new Capture(application, KINECT_WIDTH, KINECT_HEIGHT);
+      if(capture!=null) {
+        capture.start(); 
+      }
+    } catch(Exception ex) {
+      println("warning: coundn't initialize capture device");
+    }
     return capture;
   }
   

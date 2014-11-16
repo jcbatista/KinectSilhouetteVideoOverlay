@@ -31,6 +31,8 @@ final int WIDTH  = 640;  // WIDTH = 1280;
 final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
 
+PShader blur;
+
 void setup() {  
   application = this;
   
@@ -40,7 +42,7 @@ void setup() {
   configMgr = new ConfigManager();  
   scaledWidth = configMgr.getScaleWidth();
   scaledHeight = configMgr.getScaleHeight();  
-  size(scaledWidth, scaledHeight, OPENGL);
+  size(scaledWidth, scaledHeight /*, OPENGL*/);
   
   initComponents();
   initConfigSettings();
@@ -61,6 +63,13 @@ void setup() {
   font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on 
   
   println("crossfade setting = " + configMgr.getCrossfade());
+  
+  // TODO: try hardware accelerated blur
+  /*
+  blur = loadShader("blur.glsl");
+  blur.set("blurSize", 9);
+  blur.set("sigma", 5.0f);
+  */
 }
 
 void initKinect() {
@@ -381,6 +390,7 @@ void smoothEdges(PImage image) {
   if(smooth > 0) {
     image.filter(BLUR, smooth);
   }
+ // image.shader(blur);
 }
 
 /*
