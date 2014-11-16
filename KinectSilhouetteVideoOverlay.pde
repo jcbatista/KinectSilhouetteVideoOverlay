@@ -137,6 +137,7 @@ void draw() {
       
       // display rendered image
       resultImage.updatePixels();
+      updatePixels();
       image(resultImage, 0, 0, scaledWidth, scaledHeight);
 
       processCenterOfMass();      
@@ -453,14 +454,14 @@ void drawElapsedTime() {
 }
 
 // Called every time a new frame is available to read
-void movieEvent(Movie m) {
-  m.read();
-  m.loadPixels();
+void movieEvent(Movie movie) {
+  movie.read();
+  movie.loadPixels();
 }
 
-void captureEvent(Capture c) {
-  c.read();
-  c.loadPixels();
+void captureEvent(Capture captureDevice) {
+  captureDevice.read();
+  captureDevice.loadPixels();
 }
 
 void onNewUser(SimpleOpenNI curContext, int userId) {

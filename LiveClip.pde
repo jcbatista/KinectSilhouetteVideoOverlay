@@ -23,7 +23,7 @@ class LiveClip extends SilhouetteClip {
     
     filename = "Live Stream";
     
-    int duration = 10000; // TODO: hardcoded to 10 seconds for now ...
+    int duration = 20000; // TODO: hardcoded to 20 seconds for now ...
     clock.setDuration( duration );     
   }
      
