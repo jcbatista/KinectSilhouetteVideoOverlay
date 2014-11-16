@@ -37,6 +37,11 @@ void setup() {
   // set black background for full screen mode
   ((JFrame) frame).getContentPane().setBackground(java.awt.Color.BLACK);  
   
+  configMgr = new ConfigManager();  
+  scaledWidth = configMgr.getScaleWidth();
+  scaledHeight = configMgr.getScaleHeight();  
+  size(scaledWidth, scaledHeight, OPENGL);
+  
   initComponents();
   initConfigSettings();
   initKinect();
@@ -56,10 +61,6 @@ void setup() {
   font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on 
   
   println("crossfade setting = " + configMgr.getCrossfade());
-  scaledWidth = configMgr.getScaleWidth();
-  scaledHeight = configMgr.getScaleHeight();
-  size(scaledWidth, configMgr.getScaleHeight());
-  
 }
 
 void initKinect() {
@@ -88,7 +89,6 @@ void initKinect() {
 
 void initComponents() {  
   clock = new CyclicalClock();
-  configMgr = new ConfigManager();  
   oscManager = new OscManager(configMgr.getOscSettings());  
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());   
   clipMgr = new SilhouetteClipManager();
