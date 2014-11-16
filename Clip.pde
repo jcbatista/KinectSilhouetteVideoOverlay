@@ -87,18 +87,10 @@ class Clip {
   
   void setDuration(int duration) {    
     clock.setDuration(duration);
-  }
-    
-  boolean isLive() { 
-    return false; 
-  }
-  
-  protected boolean isValidFilename(String filename) {
-    return filename!=null && filename!="";
-  }
+  } 
   
   protected Movie loadMovie(String filename) {
-    if(!isValidFilename(filename)) {
+    if(!Utils.isValidFilename(filename)) {
       return null;
     }  
     Movie movie = globalLoadMovie(filename);

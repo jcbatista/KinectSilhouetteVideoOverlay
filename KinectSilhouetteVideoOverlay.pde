@@ -124,10 +124,13 @@ void draw() {
       }
                                       
       processSilhouette();
-              
-      //  don't display an image if video overlay failed
-      if(shouldOverlayVideo && !overlayVideo()) {
-         return; 
+                    
+      if(shouldOverlayVideo) {
+        //  don't display an image if video overlay failed
+        boolean success = overlayVideo();
+        if(!success) {
+          return; 
+        }
       }
       
       // display rendered image
@@ -327,12 +330,19 @@ boolean overlayVideo() {
     shouldFade = false;
   }
   
+  //PImage rgbImage = currentClip.isLive() ? kinect.rgbImage(): null;    
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
     if (maskedColor != 0) {
       // handle silhouette
       if(!shouldFade) {
-        resultImage.pixels[i] = currentClip.hasSilhouette() ? currentClip.silhouetteMovie.pixels[i] : color(0,0,0);
+  if(false) {        
+    //      resultImage.pixels[i] = rgbImage.pixels[i];
+        } else if(currentClip.hasSilhouette()) {
+          resultImage.pixels[i] = currentClip.silhouetteMovie.pixels[i];
+        } else {
+          resultImage.pixels[i] = color(0,0,0);  
+        }                      
       } else {
         // handle fade
         color source = currentClip.hasSilhouette() ? currentClip.silhouetteMovie.pixels[i] : color(0,0,0);
@@ -342,7 +352,13 @@ boolean overlayVideo() {
     } else {
       // handle background
       if(!shouldFade) {
-        resultImage.pixels[i] = currentClip.hasBackground() ? currentClip.backgroundMovie.pixels[i] : color(0,0,0);
+        if(false) {
+      //    resultImage.pixels[i] = rgbImage.pixels[i];
+        } else if(currentClip.hasBackground()) {
+          resultImage.pixels[i] = currentClip.backgroundMovie.pixels[i];
+        } else {
+          resultImage.pixels[i] = color(0,0,0);  
+        }
       } else {
         // handle fade
         color source = currentClip.hasBackground() ? currentClip.backgroundMovie.pixels[i] : color(0,0,0);
