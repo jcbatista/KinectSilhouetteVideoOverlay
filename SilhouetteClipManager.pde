@@ -21,18 +21,16 @@ class SilhouetteClipFactory
 
 class SilhouetteClipManager
 {
-  SilhouetteClipManager(PApplet applet)
+  SilhouetteClipManager()
   {    
-    this.applet  = applet;
     dataPath = dataPath("") + "/clips/";
     clips = new LinkedList<SilhouetteClip>();
-    clipFactory = new SilhouetteClipFactory();
-    
+    clipFactory = new SilhouetteClipFactory();    
   }
   
   Movie LoadMovie(String filename) {
     println("Loading clip: " + dataPath + filename);
-    return new Movie(applet,  dataPath + filename);
+    return new Movie(application,  dataPath + filename);
   }
 
   void add(SilhouetteClipInfo clipInfo) {    
@@ -135,7 +133,5 @@ class SilhouetteClipManager
   private int currentClipIndex = -1;
   private SilhouetteClip currentClip = null;
   private SilhouetteClip nextClip = null;
-  private SilhouetteClipFactory clipFactory;
-  private PApplet applet = null;
-  
+  private SilhouetteClipFactory clipFactory;  
 };

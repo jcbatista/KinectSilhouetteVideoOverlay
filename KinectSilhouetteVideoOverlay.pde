@@ -32,6 +32,7 @@ final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
 
 void setup() {  
+  application = this;
   
   // set black background for full screen mode
   ((JFrame) frame).getContentPane().setBackground(java.awt.Color.BLACK);  
@@ -58,6 +59,7 @@ void setup() {
   scaledWidth = configMgr.getScaleWidth();
   scaledHeight = configMgr.getScaleHeight();
   size(scaledWidth, configMgr.getScaleHeight());
+  
 }
 
 void initKinect() {
@@ -89,7 +91,7 @@ void initComponents() {
   configMgr = new ConfigManager();  
   oscManager = new OscManager(configMgr.getOscSettings());  
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());   
-  clipMgr = new SilhouetteClipManager(this);
+  clipMgr = new SilhouetteClipManager();
   actionMgr = new ActionClipManager(clock, configMgr.getActionClipSettings());  
 }
 
@@ -453,6 +455,12 @@ void drawElapsedTime() {
 // Called every time a new frame is available to read
 void movieEvent(Movie m) {
   m.read();
+  m.loadPixels();
+}
+
+void captureEvent(Capture c) {
+  c.read();
+  c.loadPixels();
 }
 
 void onNewUser(SimpleOpenNI curContext, int userId) {
@@ -488,6 +496,7 @@ Movie globalLoadMovie(String filename) {
 /*
  * Members
  */
+PApplet application;
 private int scaledHeight = KINECT_HEIGHT;
 private int scaledWidth = KINECT_WIDTH;
 private Clock clock;

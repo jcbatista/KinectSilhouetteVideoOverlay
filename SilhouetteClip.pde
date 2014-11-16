@@ -7,42 +7,6 @@ class SilhouetteClipInfo
   int crossfade = 0;
 }
 
-class LiveClip extends SilhouetteClip {
-  LiveClip(SilhouetteClipInfo clipInfo)
-  {
-    super();
-    this.clipInfo = clipInfo;
-    this.crossfade = clipInfo.crossfade;
-    
-    liveSilhouette = Utils.isLiveFilename(clipInfo.silhouetteFilename);
-    if(Utils.isValidFilename(clipInfo.silhouetteFilename) && !liveSilhouette) {
-       silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
-    }
-    
-    liveBackground = Utils.isLiveFilename(clipInfo.backgroundFilename);
-    if(Utils.isValidFilename(clipInfo.backgroundFilename) && !liveBackground) {
-      backgroundMovie = loadMovie(clipInfo.backgroundFilename);
-    }
-    
-    filename = "Live Stream";
-    
-    int duration = 10000; // TODO: hardcoded to 10 seconds for now ...
-    clock.setDuration( duration );     
-  }
-
-     
-   boolean isLiveSilhouette() {
-     return liveSilhouette; 
-   }
-   
-   boolean isLiveBackground() {
-     return liveBackground; 
-   }
-   
-  protected boolean liveSilhouette = false;
-  protected boolean liveBackground = false;
-}
-
 class SilhouetteClip extends Clip {
   
   SilhouetteClip() {
@@ -112,7 +76,7 @@ class SilhouetteClip extends Clip {
     return silhouetteMovie.pixels.length;
   }
 
-  int getSilhouettePixels(int index) {
+  color getSilhouettePixels(int index) {
     return hasSilhouette() ? silhouetteMovie.pixels[index] : color(0,0,0);
   }
   
@@ -120,12 +84,12 @@ class SilhouetteClip extends Clip {
     return backgroundMovie.pixels.length;
   }
 
-  int getBackgroundPixels(int index) {
+  color getBackgroundPixels(int index) {
     return hasBackground() ? backgroundMovie.pixels[index] : color(0,0,0);
   }
   
   protected SilhouetteClipInfo clipInfo;
   protected Movie silhouetteMovie = null;
-  protected Movie backgroundMovie = null;
+  protected Movie backgroundMovie = null;  
 }
 
