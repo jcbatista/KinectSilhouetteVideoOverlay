@@ -108,6 +108,22 @@ class SilhouetteClip extends Clip {
     }
   }
   
+  int getSilhouetteFrameLength() {
+    return silhouetteMovie.pixels.length;
+  }
+
+  int getSilhouettePixels(int index) {
+    return hasSilhouette() ? silhouetteMovie.pixels[index] : color(0,0,0);
+  }
+  
+  int getBackgroundFrameLength() {
+    return backgroundMovie.pixels.length;
+  }
+
+  int getBackgroundPixels(int index) {
+    return hasBackground() ? backgroundMovie.pixels[index] : color(0,0,0);
+  }
+  
   protected SilhouetteClipInfo clipInfo;
   protected Movie silhouetteMovie = null;
   protected Movie backgroundMovie = null;

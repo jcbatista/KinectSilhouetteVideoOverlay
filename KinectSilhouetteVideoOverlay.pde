@@ -271,11 +271,11 @@ void addActionClip(Clip clip) {
   if(clip==null || !clip.isStarted()) {
     return;
   }
-  for (int i=0; i < clip.movie.pixels.length; i++) {
-     int maskedColor = clip.movie.pixels[i] & colorMask;
+  for (int i=0; i < clip.getFrameLength(); i++) {
+     int maskedColor = clip.getPixels(i) & colorMask;
      if (maskedColor != 0) {
-       float saturation = saturation(clip.movie.pixels[i]);
-       float brightness = brightness(clip.movie.pixels[i]); 
+       float saturation = saturation(clip.getPixels(i));
+       float brightness = brightness(clip.getPixels(i)); 
        if(saturation>30 && brightness>100) { 
          resultImage.pixels[i] = color(0,0,255); //maskedColor;
        }
@@ -293,12 +293,12 @@ boolean isClipValid(SilhouetteClip clip) {
     return false;
   }
   
-  if(clip.hasSilhouette() && resultImage.pixels.length!=clip.silhouetteMovie.pixels.length) {
+  if(clip.hasSilhouette() && resultImage.pixels.length!=clip.getSilhouetteFrameLength()) {
     println("warning: silhouette clip size mismatch: skipping...");
     return false;
   }
   
-  if(clip.hasBackground() && resultImage.pixels.length!=clip.backgroundMovie.pixels.length) {
+  if(clip.hasBackground() && resultImage.pixels.length!=clip.getBackgroundFrameLength()) {
     println("warning: background clip size mismatch: skipping...");
     return false;
   }
@@ -318,7 +318,7 @@ boolean overlayVideo() {
   }
   
   int corssfadePos = clipMgr.getCrossfadePosition();
-  boolean shouldFade = nextClip!=null && corssfadePos > 0 ; 
+  boolean shouldFade = nextClip!=null && corssfadePos > 0; 
   float ratio = getCrossfadeRatio(currentClip);
 /*
   if(corssfadePos > 0){
@@ -329,40 +329,27 @@ boolean overlayVideo() {
     println("warning: skipping nextClip ...");
     shouldFade = false;
   }
-  
-  //PImage rgbImage = currentClip.isLive() ? kinect.rgbImage(): null;    
+    
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
     if (maskedColor != 0) {
       // handle silhouette
       if(!shouldFade) {
-  if(false) {        
-    //      resultImage.pixels[i] = rgbImage.pixels[i];
-        } else if(currentClip.hasSilhouette()) {
-          resultImage.pixels[i] = currentClip.silhouetteMovie.pixels[i];
-        } else {
-          resultImage.pixels[i] = color(0,0,0);  
-        }                      
+        resultImage.pixels[i] = currentClip.getSilhouettePixels(i);
       } else {
-        // handle fade
-        color source = currentClip.hasSilhouette() ? currentClip.silhouetteMovie.pixels[i] : color(0,0,0);
-        color target = nextClip.hasSilhouette() ? nextClip.silhouetteMovie.pixels[i] : color(0,0,0);        
+        // handle silhouette fade
+        color source = currentClip.getSilhouettePixels(i);
+        color target = nextClip.getSilhouettePixels(i);        
         resultImage.pixels[i] = lerpColor(source, target, ratio);
       }
     } else {
       // handle background
       if(!shouldFade) {
-        if(false) {
-      //    resultImage.pixels[i] = rgbImage.pixels[i];
-        } else if(currentClip.hasBackground()) {
-          resultImage.pixels[i] = currentClip.backgroundMovie.pixels[i];
-        } else {
-          resultImage.pixels[i] = color(0,0,0);  
-        }
+        resultImage.pixels[i] = currentClip.getBackgroundPixels(i);
       } else {
-        // handle fade
-        color source = currentClip.hasBackground() ? currentClip.backgroundMovie.pixels[i] : color(0,0,0);
-        color target = nextClip.hasBackground() ? nextClip.backgroundMovie.pixels[i] : color(0,0,0);
+        // handle background fade
+        color source = currentClip.getBackgroundPixels(i);
+        color target = nextClip.getBackgroundPixels(i);
         resultImage.pixels[i] = lerpColor(source, target, ratio);
       }
     }

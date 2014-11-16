@@ -72,9 +72,13 @@ class Clip {
   String getFilename() {
     return filename;
   }
- 
-  Movie getMovie() {
-    return movie;
+
+  int getFrameLength() {
+    return movie.pixels.length;
+  }
+
+  int getPixels(int index) {
+    return movie.pixels[index];
   }
   
   int getDuration() {
@@ -100,10 +104,10 @@ class Clip {
     return movie; 
   }  
  
+  protected Clock clock;
+  protected Movie movie;
   protected int crossfade;
-  protected Clock clock; 
   protected boolean started;
   protected String filename;
-  protected Movie movie;
 }
 
