@@ -13,6 +13,10 @@ class SilhouetteClipManager
     println("Loading clip: " + dataPath + filename);
     return new Movie(applet,  dataPath + filename);
   }
+  
+  void isLive(SilhouetteClipInfo clipInfo) {
+    
+  }
 
   void add(SilhouetteClipInfo clipInfo) {
     SilhouetteClip clip = new SilhouetteClip(clipInfo);

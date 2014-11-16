@@ -9,25 +9,44 @@ class SilhouetteClipInfo
 
 class SilhouetteClip extends Clip {
   
-  // Note: it's asssumed that the silhouette vidoe length needs to be longer or identical to the length of the background video 
+  SilhouetteClip() {
+    super();
+  }
   
+  // Note: it's asssumed that the silhouette vidoe length needs to be longer or identical to the length of the background video   
   SilhouetteClip(SilhouetteClipInfo clipInfo)
   {
-    clock = new Clock();
+    super();
     this.clipInfo = clipInfo;
     this.crossfade = clipInfo.crossfade; // adjust crossfade propertie in the baseclass
-    silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
-    backgroundMovie = loadMovie(clipInfo.backgroundFilename);
+    
+    liveSilhouette = isLive(clipInfo.silhouetteFilename);
+    if(isValidFilename(clipInfo.silhouetteFilename) && !liveSilhouette) {
+       silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
+    }
+    
+    liveBackground = isLive(clipInfo.backgroundFilename);
+    if(isValidFilename(clipInfo.backgroundFilename) && !liveBackground) {
+      backgroundMovie = loadMovie(clipInfo.backgroundFilename);
+    }
     
     // set a default movie / filename
     if(silhouetteMovie != null) {
       movie = silhouetteMovie;
-      filename =clipInfo.silhouetteFilename;
-    } else {
+      filename = clipInfo.silhouetteFilename;
+    } else if (backgroundMovie != null) {
       movie = backgroundMovie;
       filename = clipInfo.backgroundFilename;      
+    } else {
+      filename = "Live Stream";
     }
-    int duration = int (movie.duration() * 1000 - 300);
+    
+    int duration = 0;
+    if(!isLive()) { 
+      duration = int (movie.duration() * 1000);
+    } else {
+      duration = 10000; // TODO: hardcoded to 10 seconds for now ...
+    }
     clock.setDuration( duration );     
   }
     
@@ -68,8 +87,26 @@ class SilhouetteClip extends Clip {
     }
   }
   
-  private SilhouetteClipInfo clipInfo;
-  private Movie silhouetteMovie; // can be null
-  private Movie backgroundMovie;
+  boolean isLive(String filename) {
+    return isValidFilename(filename) && filename.equalsIgnoreCase("live");
+  } 
+    
+   boolean isLiveSilhouette() {
+     return liveSilhouette; 
+   }
+   
+   boolean isLiveBackground() {
+     return liveBackground; 
+   }
+   
+   boolean isLive() {
+     return liveSilhouette || liveBackground; 
+   };
+  
+  protected SilhouetteClipInfo clipInfo;
+  protected Movie silhouetteMovie = null;
+  protected Movie backgroundMovie = null;
+  protected boolean liveSilhouette = false;
+  protected boolean liveBackground = false;
 }
 
