@@ -16,8 +16,6 @@ import netP5.*;
  *   Based on Greg's Book Making things see. Also based on the Comperas source tree
  *      https://github.com/ITPNYU/Comperas/tree/master/KinectBackgroundRemoval
  *
- *   FastBlur algorithm by Mario Klingemann 
- *
  *   Instructions:
  *     install this on your machine and also the library in processing
  *     http://code.google.com/p/simple-openni/wiki/Installation
@@ -390,8 +388,7 @@ PImage resizeSilhouette(PImage image) {
  */
 void smoothEdges(PImage image) {
   if(smooth > 0) {
-    //image.filter(BLUR, smooth);
-    Blur.apply(image, smooth);
+    image.filter(BLUR, smooth);
   }
 }
 
