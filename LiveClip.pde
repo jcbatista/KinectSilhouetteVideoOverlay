@@ -65,7 +65,7 @@ class LiveClip extends SilhouetteClip {
   void start() {
     if(isLiveSilhouette()) {
       silhouetteCapture.start();
-    } else {
+    } else if(isLiveBackground()) {
       backgroundCapture.start();
     }
     super.start();
@@ -74,10 +74,9 @@ class LiveClip extends SilhouetteClip {
   void stop() {
     if(isLiveSilhouette()) {
       silhouetteCapture.stop();
-    } else {
+     } else if(isLiveBackground()) {
       backgroundCapture.stop();
     }
-
     super.stop();
   }
 
