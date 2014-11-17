@@ -42,7 +42,7 @@ void setup() {
   configMgr = new ConfigManager();  
   scaledWidth = configMgr.getScaleWidth();
   scaledHeight = configMgr.getScaleHeight();  
-  size(scaledWidth, scaledHeight /*, OPENGL*/);
+  size(scaledWidth, scaledHeight, OPENGL);
   
   initComponents();
   initConfigSettings();
@@ -65,11 +65,10 @@ void setup() {
   println("crossfade setting = " + configMgr.getCrossfade());
   
   // TODO: try hardware accelerated blur
-  /*
   blur = loadShader("blur.glsl");
-  blur.set("blurSize", 9);
+  blur.set("blurSize", 1);
   blur.set("sigma", 5.0f);
-  */
+
 }
 
 void initKinect() {
@@ -114,28 +113,22 @@ void initConfigSettings() {
 
 void draw() {    
     kinect.update();
+    background(color(0,0,0));
     if (tracking) {
       if(shouldOverlayVideo && !clipMgr.isStarted()) {
         clipMgr.start();
         actionMgr.start();
         clock.start();
-      }
-                
-      loadPixels();
-     
-      // create a buffer image that will contain the rendered content
-      resultImage = new PImage(WIDTH, HEIGHT, RGB); 
+      }    
               
       if(actionMgr.shouldPlay()) {
         actionMgr.next();
         Clip actionClip = actionMgr.getCurrent();
         addActionClip(actionClip);  
-      } else {
-        initResultImage();
       }
                                       
       processSilhouette();
-                    
+      
       if(shouldOverlayVideo) {
         //  don't display an image if video overlay failed
         boolean success = overlayVideo();
@@ -144,10 +137,9 @@ void draw() {
         }
       }
       
-      // display rendered image
-      resultImage.updatePixels();
+      // display rendered image      
       updatePixels();
-      image(resultImage, 0, 0, scaledWidth, scaledHeight);
+      //image(resultImage, 0, 0, scaledWidth, scaledHeight);
 
       processCenterOfMass();      
       drawElapsedTime();
@@ -166,10 +158,9 @@ void processSilhouette() {
     if(shouldResizeSilhouette) {
       silhouette = resizeSilhouette(silhouette); 
     }
-    silhouette.updatePixels();
     addSilhouette(silhouette);
   }
-  smoothEdges(resultImage); 
+  smoothEdges(); 
 }
 
 void displayCenterOfMass(PVector position) {
@@ -177,7 +168,7 @@ void displayCenterOfMass(PVector position) {
     fill(255, 0, 0);
     // adjust position in re-scaled image
     float posx = position.x * scaledWidth / KINECT_WIDTH;
-    float posy = position.y * scaledHeight/ KINECT_HEIGHT;
+    float posy = position.y * scaledHeight / KINECT_HEIGHT;
     ellipse(position.x, position.y, 25, 25);
   }
 }
@@ -270,11 +261,7 @@ SilhouetteFrame getSilhouette() {
   return frame;
 }
 
-void initResultImage() {
-  for (int i=0; i < WIDTH * HEIGHT; i++) {
-   resultImage.pixels[i] = color(0,0,0);
-  }
-}
+
 
 /*
  * apply the action clip on the result image
@@ -283,17 +270,18 @@ void addActionClip(Clip clip) {
   if(clip==null || !clip.isStarted()) {
     return;
   }
+  loadPixels();
   for (int i=0; i < clip.getFrameLength(); i++) {
      int maskedColor = clip.getPixels(i) & colorMask;
      if (maskedColor != 0) {
        float saturation = saturation(clip.getPixels(i));
        float brightness = brightness(clip.getPixels(i)); 
        if(saturation>30 && brightness>100) { 
-         resultImage.pixels[i] = color(0,0,255); //maskedColor;
+         pixels[i] = color(0,0,255); //maskedColor;
        }
      }
   }
-  resultImage.updatePixels();
+  updatePixels();
 }
 
 float getCrossfadeRatio(Clip clip) {
@@ -305,12 +293,12 @@ boolean isClipValid(SilhouetteClip clip) {
     return false;
   }
   
-  if(clip.hasSilhouette() && resultImage.pixels.length!=clip.getSilhouetteFrameLength()) {
+  if(clip.hasSilhouette() && pixels.length!=clip.getSilhouetteFrameLength()) {
     println("warning: silhouette clip size mismatch: skipping...");
     return false;
   }
   
-  if(clip.hasBackground() && resultImage.pixels.length!=clip.getBackgroundFrameLength()) {
+  if(clip.hasBackground() && pixels.length!=clip.getBackgroundFrameLength()) {
     println("warning: background clip size mismatch: skipping...");
     return false;
   }
@@ -341,33 +329,33 @@ boolean overlayVideo() {
     println("warning: skipping nextClip ...");
     shouldFade = false;
   }
-    
-  for (int i=0; i < resultImage.pixels.length; i++) {       
-    int maskedColor = resultImage.pixels[i] & colorMask;
+   
+  loadPixels(); 
+  for (int i=0; i < pixels.length; i++) {       
+    int maskedColor = pixels[i] & colorMask;
     if (maskedColor != 0) {
       // handle silhouette
       if(!shouldFade) {
-        resultImage.pixels[i] = currentClip.getSilhouettePixels(i);
+        pixels[i] = currentClip.getSilhouettePixels(i);
       } else {
         // handle silhouette fade
         color source = currentClip.getSilhouettePixels(i);
         color target = nextClip.getSilhouettePixels(i);        
-        resultImage.pixels[i] = lerpColor(source, target, ratio);
+        pixels[i] = lerpColor(source, target, ratio);
       }
     } else {
       // handle background
       if(!shouldFade) {
-        resultImage.pixels[i] = currentClip.getBackgroundPixels(i);
+        pixels[i] = currentClip.getBackgroundPixels(i);
       } else {
         // handle background fade
         color source = currentClip.getBackgroundPixels(i);
         color target = nextClip.getBackgroundPixels(i);
-        resultImage.pixels[i] = lerpColor(source, target, ratio);
+        pixels[i] = lerpColor(source, target, ratio);
       }
     }
   }
-  
-  resultImage.updatePixels();
+  updatePixels();
   
   return true;
 }
@@ -378,19 +366,21 @@ boolean overlayVideo() {
 PImage resizeSilhouette(PImage image) {
   int imageWidth = WIDTH - (silhouettePadding.left + silhouettePadding.right);
   int imageHeigth = HEIGHT - (silhouettePadding.top + silhouettePadding.bottom);
+  image.loadPixels();
   image = image.get(silhouettePadding.left, silhouettePadding.top, imageWidth, imageHeigth);
   image.resize(WIDTH, HEIGHT);
+  image.updatePixels();
   return image;
 }
 
 /*
  * apply a blur filter on the given image
  */
-void smoothEdges(PImage image) {
+void smoothEdges() {
   if(smooth > 0) {
-    image.filter(BLUR, smooth);
+    
+       
   }
- // image.shader(blur);
 }
 
 /*
@@ -400,12 +390,13 @@ PImage convertSilhouette(SilhouetteFrame frame) {
   if(frame==null) {
     // minimize this log message
     if(previousFrame!=null) {
-       //println("warning. convertSilhouette(): got a null frame, ignoring ...");
+       // println("warning. convertSilhouette(): got a null frame, ignoring ...");
     }
     return null;
   }
   previousFrame = frame;
   PImage image = new PImage(WIDTH, HEIGHT, RGB); 
+  image.loadPixels();
   for (int i=0; i < frame.size(); i++) {
     if (frame.get(i)) {
       image.pixels[i] = color(0,0,255);       
@@ -421,6 +412,8 @@ PImage convertSilhouette(SilhouetteFrame frame) {
  * apply the silhouette on the resultImage
  */
 void addSilhouette(PImage silhouette) {
+  loadPixels();
+  silhouette.loadPixels();
   int maskedColor = 0;
   if(shouldMirrorSilouette) {
     // perform an horizontal flip of the silhouette
@@ -433,12 +426,12 @@ void addSilhouette(PImage silhouette) {
         // handle leftmost pixel
         maskedColor = silhouette.pixels[i] & 0xffffff;
         if (maskedColor > 0) {
-          resultImage.pixels[j] = silhouette.pixels[i];       
+          pixels[j] = silhouette.pixels[i];       
         }
         // handle rigthmost pixel
         maskedColor = silhouette.pixels[j] & 0xffffff;
         if (maskedColor > 0) {
-          resultImage.pixels[i] = silhouette.pixels[j];       
+          pixels[i] = silhouette.pixels[j];       
         }
       }
     }
@@ -446,10 +439,13 @@ void addSilhouette(PImage silhouette) {
     for (int i=0; i < silhouette.pixels.length; i++) {
       maskedColor = silhouette.pixels[i] & 0xffffff;
       if (maskedColor > 0) {
-        resultImage.pixels[i] = silhouette.pixels[i];       
+        pixels[i] = silhouette.pixels[i];       
       }
     }
   }
+
+  updatePixels();
+  
 }
 
 void drawElapsedTime() {
@@ -529,7 +525,6 @@ private int userID;
 private int[] userMap;
 
 private int smooth = 0;
-private PImage resultImage;
 private NetAddress myRemoteLocation;
 private IntVector userList;
 private PFont font;
