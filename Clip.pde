@@ -97,7 +97,7 @@ class Clip {
     if(!Utils.isValidFilename(filename)) {
       return null;
     }  
-    Movie movie = globalLoadMovie(filename);
+    Movie movie = new Movie(application, dataPath("") + "/clips/" + filename);
     movie.pause();
     // TODO: we might no longer need duration in the json.config file for action clips 
     // println(filename + " duration=" + (int) movie.duration() + "!!!!!!!!");    
