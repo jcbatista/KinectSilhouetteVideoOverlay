@@ -23,8 +23,7 @@ class LiveClip extends SilhouetteClip {
     
     filename = "Live Stream";
     
-    int duration = 20000; // TODO: hardcoded to 20 seconds for now ...
-    clock.setDuration( duration );     
+    setDuration(clipInfo.duration); 
   }
      
    boolean isLiveSilhouette() {

@@ -13,9 +13,8 @@ class Clip {
   {    
     clock = new Clock();
     this.filename = filename;
-    movie = loadMovie(filename);
-    int duration = (int) (movie.duration() * 1000); // in ms
-    clock.setDuration(duration);
+    movie = loadMovie(filename);    
+    setDuration();
     started = false;
     crossfade = 0;
   }   
@@ -89,7 +88,19 @@ class Clip {
     return clock.getDuration();
   }
   
-  void setDuration(int duration) {    
+  void setDuration() {
+    setDuration(-1);
+  }
+  
+  void setDuration(int duration) {
+    if(duration==-1) {
+      if(movie!=null) {
+        duration = (int) (movie.duration() * 1000); // in ms
+      } else {
+        println("warning: undefined movie for clip filename=" + filename + ". using 1 second default duration."); 
+        duration = 1000;
+      }
+    }  
     clock.setDuration(duration);
   } 
   

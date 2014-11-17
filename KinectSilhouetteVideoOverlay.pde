@@ -501,7 +501,7 @@ void oscEvent(OscMessage theOscMessage) {
 /*
  * Members
  */
-PApplet application;
+public PApplet application;
 private int scaledHeight = KINECT_HEIGHT;
 private int scaledWidth = KINECT_WIDTH;
 private Clock clock;
