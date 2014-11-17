@@ -499,10 +499,27 @@ void oscEvent(OscMessage theOscMessage) {
   */
 }
 
+PApplet getApp() {
+  return application;
+}
+
+Capture getCaptureDevice() {
+  if(capture!=null) {
+    return capture;
+  }
+  try { 
+    capture = new Capture(application, KINECT_WIDTH, KINECT_HEIGHT);
+  } catch(Exception ex) {
+    println("warning: coundn't initialize capture device");
+  }
+  return capture;
+}
+
 /*
  * Members
  */
-public PApplet application;
+private PApplet application;
+private Capture capture = null;
 private int scaledHeight = KINECT_HEIGHT;
 private int scaledWidth = KINECT_WIDTH;
 private Clock clock;

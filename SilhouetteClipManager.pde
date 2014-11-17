@@ -28,11 +28,6 @@ class SilhouetteClipManager
     clipFactory = new SilhouetteClipFactory();    
   }
   
-  Movie LoadMovie(String filename) {
-    println("Loading clip: " + dataPath + filename);
-    return new Movie(application,  dataPath + filename);
-  }
-
   void add(SilhouetteClipInfo clipInfo) {    
     SilhouetteClip clip = clipFactory.create(clipInfo);
     clips.add(clip);
