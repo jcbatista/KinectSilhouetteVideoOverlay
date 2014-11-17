@@ -160,7 +160,7 @@ void draw() {
 }
 
 void processSilhouette() {
-  SilhouetteFrame silhouetteFrame = getSilhouette();
+  SilhouetteFrame silhouetteFrame = getSilhouetteFrame();
   PImage silhouette = convertSilhouette(silhouetteFrame);
   if(silhouette!=null) {
     if(shouldResizeSilhouette) {
@@ -184,15 +184,18 @@ void displayCenterOfMass(PVector position) {
 
 void processCenterOfMass()
 {  
-  if(usingFrameCache) {
+  if(silhouetteCache.isStarted()) {
     // were using cached frames, send the cached meta data using OSC
     SilhouetteFrame frame = silhouetteCache.getCurrent();
-    if(frame.getMetaDataList().size()>0) {    
+    if(frame!=null && frame.getMetaDataList().size()>0) {    
       for(MetaData metaData: frame.getMetaDataList()) {
         oscManager.send(clipMgr.getCurrentIndex(), metaData.totalUsers,  metaData.userIndex, metaData.position, actionMgr.getCurrentIndex());
         displayCenterOfMass(metaData.position);
       }
     } else {
+      if(frame==null) {
+        println("warning: invalid cached SilhouetteFrame received ...");
+      }
       // cached frame has not metadata
       oscManager.send(clipMgr.getCurrentIndex(), 0, 0, new PVector(), actionMgr.getCurrentIndex());
     }
@@ -226,7 +229,7 @@ void processCenterOfMass()
 /*
  * retrieves a silhouette frame ( a bitset where all the pixel that represent the silhouette are set to true )
  */
-SilhouetteFrame getSilhouette() { 
+SilhouetteFrame getSilhouetteFrame() { 
   SilhouetteFrame frame =  null;
   userMap = kinect.userMap();
   kinect.getUsers(userList);
@@ -239,11 +242,10 @@ SilhouetteFrame getSilhouette() {
     hasUserMap = false;
   }
 
-  if(userMap.length > 0 && userCount > 0) {
-       
-    if(usingFrameCache) {
+  if(userMap.length > 0 && userCount > 0) {       
+    if(silhouetteCache.isStarted()) {      
+      silhouetteCache.stop();
       println("starting using Kinect user map frames ...");
-      usingFrameCache = false;
     } 
     
     // store silhouette frame in cache
@@ -259,9 +261,8 @@ SilhouetteFrame getSilhouette() {
   } else {
     // if the cache has enough frames from playback get the current one
     if(silhouetteCache.canPlayback()) {
-      if(!usingFrameCache) {
-        println("starting using Silhouette cached frames ...");
-        usingFrameCache = true;
+      if(!silhouetteCache.isStarted()) {        
+        silhouetteCache.start();
       } 
       silhouetteCache.next();
       frame = silhouetteCache.getCurrent();
@@ -528,5 +529,4 @@ private NetAddress myRemoteLocation;
 private IntVector userList;
 private PFont font;
 private SilhouetteFrame previousFrame = null;
-private boolean usingFrameCache = true;
 
