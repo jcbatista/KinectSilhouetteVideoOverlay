@@ -4,6 +4,7 @@ class SilhouetteClipInfo
 {
   String silhouetteFilename = "";
   String backgroundFilename = "";
+  int duration = -1; // duration in ms, use the lenght of the clip if -1
   int crossfade = 0;
 }
 
@@ -30,9 +31,8 @@ class SilhouetteClip extends Clip {
       movie = backgroundMovie;
       filename = clipInfo.backgroundFilename;      
     }
-    
-    int  duration = int (movie.duration() * 1000);
-    clock.setDuration( duration );     
+        
+    setDuration(clipInfo.duration);  
   }
     
   boolean hasSilhouette() {

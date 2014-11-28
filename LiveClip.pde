@@ -11,20 +11,19 @@ class LiveClip extends SilhouetteClip {
     if(Utils.isValidFilename(clipInfo.silhouetteFilename) && !liveSilhouette) {
        silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
     } else if(liveSilhouette) {
-      silhouetteCapture = capture();
+      silhouetteCapture = getCaptureDevice();
     }
     
     boolean liveBackground = Utils.isLiveFilename(clipInfo.backgroundFilename);
     if(Utils.isValidFilename(clipInfo.backgroundFilename) && !liveBackground) {
       backgroundMovie = loadMovie(clipInfo.backgroundFilename);
     } else if(liveBackground) {
-      backgroundCapture = capture();
+      backgroundCapture = getCaptureDevice();
     }
     
     filename = "Live Stream";
     
-    int duration = 20000; // TODO: hardcoded to 20 seconds for now ...
-    clock.setDuration( duration );     
+    setDuration(clipInfo.duration); 
   }
      
    boolean isLiveSilhouette() {
@@ -63,19 +62,25 @@ class LiveClip extends SilhouetteClip {
     return super.getBackgroundPixels(index);
   }
   
-  protected Capture capture() {
-    Capture capture = null;
-    try { 
-      capture = new Capture(application, KINECT_WIDTH, KINECT_HEIGHT);
-      if(capture!=null) {
-        capture.start(); 
-      }
-    } catch(Exception ex) {
-      println("warning: coundn't initialize capture device");
+  void start() {
+    if(isLiveSilhouette()) {
+      silhouetteCapture.start();
+    } else if(isLiveBackground()) {
+      backgroundCapture.start();
     }
-    return capture;
+    super.start();
   }
   
+  void stop() {
+    if(isLiveSilhouette()) {
+      silhouetteCapture.stop();
+     } else if(isLiveBackground()) {
+      backgroundCapture.stop();
+    }
+    super.stop();
+  }
+
+    
   protected Capture silhouetteCapture = null;
   protected Capture backgroundCapture = null;  
 }

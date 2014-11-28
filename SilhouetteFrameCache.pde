@@ -74,7 +74,6 @@ class SilhouetteFrameCache {
       int frameRateGranularity =  1000 / ceil(frameRate / 2);
       this.clock.setGranularity(frameRateGranularity);
       println("************* SilhouetteFrameCache ready for playback, framerate: "+ int(frameRate) +" fps, clock ganularity: " + frameRateGranularity +"ms *************");
-      this.clock.start();
     }
   }
   
@@ -94,7 +93,14 @@ class SilhouetteFrameCache {
       println("framecache time changed at " + clock.getCurrentTimeInSec());
     }
     */
-    if(enabled && size > 0 && clock.hasTimeChanged()) {
+    
+    boolean timeChanged = clock.hasTimeChanged();
+    
+    if(!timeChanged && currentFrameIndex==-1) {
+      println("error: SilhouetteFrame.next(). clock.hasTimeChanged() should be true");
+    }
+    
+    if(enabled && size > 0 && timeChanged) {
       currentFrameIndex++;
       currentFrameIndex = (currentFrameIndex + 1) % size;
     }
@@ -113,14 +119,36 @@ class SilhouetteFrameCache {
     if(enabled && cache.size() > 0) {
       if(currentFrameIndex != -1) {        
         frame = cache.get(currentFrameIndex);
-      }          
+      }
+      if(frame==null) {
+        println("error: invalid frame in cache. currentFrameIndex=" + currentFrameIndex + " of " + cache.size());
+      }      
     }
-    // println("currentFrameIndex=" + currentFrameIndex + " of " + size);
+    
     return frame;
+  }
+  
+  void start() {      
+    println("starting using Silhouette cached frames ...");
+    isStarted = true;
+    if(currentFrameIndex==-1 && canPlayback()) {
+      currentFrameIndex = 0;
+    }
+    this.clock.reset();
+  }
+  
+  void stop() {
+    isStarted = false;
+    println("stopped using Silhouette cached frames ...");
+  }
+  
+  boolean isStarted() {
+    return isStarted;
   }
   
   private Clock clock;
   private boolean enabled = false;
+  private boolean isStarted = false;
   private boolean playbackReady = false;
   private LinkedList<SilhouetteFrame> cache;
   private int currentFrameIndex = -1;
