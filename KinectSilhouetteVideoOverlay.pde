@@ -60,12 +60,16 @@ void setup() {
 }
 
 void initKinect() {
+  if(!useKinect) {
+    return;
+  }
+  
   kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
   if(kinect.isInit() == false) {  
      println("Can't init SimpleOpenNI, maybe the camera is not connected!"); 
      exit(); 
   } 
-
+ 
   // enable depthMap generation 
   kinect.enableDepth();
    
@@ -93,6 +97,7 @@ void initComponents() {
 }
 
 void initConfigSettings() {
+  useKinect = configMgr.useKinect();
   shouldOverlayVideo = configMgr.overlayVideo();
   shouldResizeSilhouette = configMgr.resizeSilhouette();
   shouldMirrorSilouette = configMgr.mirrorSilhouette();
@@ -101,8 +106,10 @@ void initConfigSettings() {
 }
 
 void draw() {    
-    kinect.update();
-    if (tracking) {
+    if(useKinect) {
+      kinect.update();
+    }
+    if (useKinect? tracking: true) {
       if(shouldOverlayVideo && !clipMgr.isStarted()) {
         clipMgr.start();
         actionMgr.start();
@@ -132,6 +139,7 @@ void draw() {
       // display rendered image
       resultImage.updatePixels();
       image(resultImage, 0, 0, scaledWidth, scaledHeight);
+      // TODO: processCenterOfMass can't be used without useKinect==true
 
       //processCenterOfMass();      
       drawElapsedTime();
@@ -144,6 +152,9 @@ void draw() {
 }
 
 void processSilhouette() {
+  if(!useKinect) {
+    return;
+  }
   SilhouetteFrame silhouetteFrame = getSilhouette();
   PImage silhouette = convertSilhouette(silhouetteFrame);
   if(silhouette!=null) {
@@ -477,6 +488,7 @@ private int scaledHeight = KINECT_HEIGHT;
 private int scaledWidth = KINECT_WIDTH;
 private Timeline timeline;
 private SimpleOpenNI kinect; // Kinect API
+private boolean useKinect = false;
 private boolean hasUserMap = false;
 private SilhouetteClipManager clipMgr; 
 private ConfigManager configMgr;

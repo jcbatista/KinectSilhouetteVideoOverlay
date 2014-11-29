@@ -40,6 +40,13 @@ class ConfigManager {
     return list; 
   }
   
+  /*
+   * return true if we should be using a Kinect (true by default), false otherwise
+   */
+  boolean useKinect() {
+    return configJSON.hasKey("useKinect") ? configJSON.getBoolean("useKinect"): true;
+  }
+  
   // return an identifier for the installation (since there could be multiple Kinects/Projectors) 
   String getName() {
     return configJSON.getString("name");
