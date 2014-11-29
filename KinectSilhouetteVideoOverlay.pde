@@ -32,6 +32,7 @@ final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
 
 PShader blur;
+PGraphics pass1, pass2;
 
 void setup() {  
   application = this;
@@ -42,7 +43,7 @@ void setup() {
   configMgr = new ConfigManager();  
   scaledWidth = configMgr.getScaleWidth();
   scaledHeight = configMgr.getScaleHeight();  
-  size(scaledWidth, scaledHeight /*, OPENGL*/);
+  size(scaledWidth, scaledHeight, P2D);
   
   initComponents();
   initConfigSettings();
@@ -65,11 +66,16 @@ void setup() {
   println("crossfade setting = " + configMgr.getCrossfade());
   
   // TODO: try hardware accelerated blur
-  /*
+  
   blur = loadShader("blur.glsl");
-  blur.set("blurSize", 9);
-  blur.set("sigma", 5.0f);
-  */
+  blur.set("blurSize", 60);
+  blur.set("sigma", 1.8f); 
+  
+  pass1 = createGraphics(KINECT_WIDTH, KINECT_HEIGHT, P2D);
+  pass1.noSmooth();  
+  
+  pass2 = createGraphics(KINECT_WIDTH, KINECT_HEIGHT, P2D);
+  pass2.noSmooth();
 }
 
 void initKinect() {
@@ -121,7 +127,7 @@ void draw() {
         clock.start();
       }
                 
-      loadPixels();
+
      
       // create a buffer image that will contain the rendered content
       resultImage = new PImage(WIDTH, HEIGHT, RGB); 
@@ -146,7 +152,7 @@ void draw() {
       
       // display rendered image
       resultImage.updatePixels();
-      updatePixels();
+ 
       image(resultImage, 0, 0, scaledWidth, scaledHeight);
 
       processCenterOfMass();      
@@ -169,7 +175,7 @@ void processSilhouette() {
     silhouette.updatePixels();
     addSilhouette(silhouette);
   }
-  smoothEdges(resultImage); 
+  resultImage =smoothEdges(resultImage); 
 }
 
 void displayCenterOfMass(PVector position) {
@@ -387,10 +393,25 @@ PImage resizeSilhouette(PImage image) {
 /*
  * apply a blur filter on the given image
  */
-void smoothEdges(PImage image) {
+PImage smoothEdges(PImage image) {
   if(smooth > 0) {
-    image.filter(BLUR, smooth);
+    //image.filter(BLUR, smooth);
+      // Applying the blur shader along the vertical direction   
+  blur.set("horizontalPass", 0);
+  pass1.beginDraw();            
+  pass1.shader(blur);  
+  pass1.image(image, 0, 0);
+  pass1.endDraw();
+  
+  // Applying the blur shader along the horizontal direction      
+  blur.set("horizontalPass", 1);
+  pass2.beginDraw();            
+  pass2.shader(blur);  
+  pass2.image(pass1, 0, 0);
+  pass2.endDraw();    
+  image = pass2.get();  
   }
+  return image;
 }
 
 /*
