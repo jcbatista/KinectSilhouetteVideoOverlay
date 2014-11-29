@@ -1,5 +1,6 @@
 import javax.swing.JFrame;
 import java.util.LinkedList;
+import java.util.Arrays;
 import processing.video.*;
 import processing.opengl.*; 
 import SimpleOpenNI.*;
@@ -273,9 +274,13 @@ SilhouetteFrame getSilhouetteFrame() {
 }
 
 void initResultImage() {
+  Arrays.fill(pixels,  color(0,0,0));
+  /*
   for (int i=0; i < WIDTH * HEIGHT; i++) {
    resultImage.pixels[i] = color(0,0,0);
   }
+  */
+  
 }
 
 /*
