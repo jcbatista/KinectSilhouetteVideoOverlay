@@ -98,6 +98,7 @@ void initComponents() {
 
 void initConfigSettings() {
   useKinect = configMgr.useKinect();
+  useGPU = configMgr.useGPU();
   shouldOverlayVideo = configMgr.overlayVideo();
   shouldResizeSilhouette = configMgr.resizeSilhouette();
   shouldMirrorSilouette = configMgr.mirrorSilhouette();
@@ -489,6 +490,7 @@ private int scaledWidth = KINECT_WIDTH;
 private Timeline timeline;
 private SimpleOpenNI kinect; // Kinect API
 private boolean useKinect = false;
+private boolean useGPU = false;
 private boolean hasUserMap = false;
 private SilhouetteClipManager clipMgr; 
 private ConfigManager configMgr;
