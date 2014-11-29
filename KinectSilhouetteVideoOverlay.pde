@@ -35,7 +35,8 @@ PShader blur;
 
 void setup() {  
   application = this;
-  
+  println("Java version = " + System.getProperty("java.version"));
+    
   // set black background for full screen mode
   ((JFrame) frame).getContentPane().setBackground(java.awt.Color.BLACK);  
   
