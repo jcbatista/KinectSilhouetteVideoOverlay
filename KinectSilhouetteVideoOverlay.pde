@@ -65,11 +65,11 @@ void setup() {
   
   println("crossfade setting = " + configMgr.getCrossfade());
   
-  // TODO: try hardware accelerated blur
-  
+  // init hardware accelerated blur 
+  // TODO: refactor this  
   blur = loadShader("blur.glsl");
   blur.set("blurSize", 60);
-  blur.set("sigma", 1.8f); 
+  blur.set("sigma", 2f); 
   
   pass1 = createGraphics(KINECT_WIDTH, KINECT_HEIGHT, P2D);
   pass1.noSmooth();  
@@ -126,9 +126,7 @@ void draw() {
         actionMgr.start();
         clock.start();
       }
-                
-
-     
+                     
       // create a buffer image that will contain the rendered content
       resultImage = new PImage(WIDTH, HEIGHT, RGB); 
               
@@ -149,10 +147,7 @@ void draw() {
           return; 
         }
       }
-      
-      // display rendered image
-      resultImage.updatePixels();
- 
+       
       image(resultImage, 0, 0, scaledWidth, scaledHeight);
 
       processCenterOfMass();      
@@ -172,10 +167,9 @@ void processSilhouette() {
     if(shouldResizeSilhouette) {
       silhouette = resizeSilhouette(silhouette); 
     }
-    silhouette.updatePixels();
     addSilhouette(silhouette);
   }
-  resultImage =smoothEdges(resultImage); 
+  resultImage = smoothEdges(resultImage); 
 }
 
 void displayCenterOfMass(PVector position) {
@@ -278,9 +272,15 @@ SilhouetteFrame getSilhouetteFrame() {
 }
 
 void initResultImage() {
-  for (int i=0; i < WIDTH * HEIGHT; i++) {
+  
+  resultImage.loadPixels();
+  for (int i=0; i < KINECT_WIDTH * KINECT_HEIGHT; i++) {
    resultImage.pixels[i] = color(0,0,0);
   }
+  resultImage.updatePixels();
+  
+  //background(color(0,0,0));
+  //resultImage = get(0, 0, KINECT_WIDTH, KINECT_HEIGHT);
 }
 
 /*
@@ -290,6 +290,7 @@ void addActionClip(Clip clip) {
   if(clip==null || !clip.isStarted()) {
     return;
   }
+  resultImage.loadPixels();
   for (int i=0; i < clip.getFrameLength(); i++) {
      int maskedColor = clip.getPixels(i) & colorMask;
      if (maskedColor != 0) {
@@ -349,6 +350,7 @@ boolean overlayVideo() {
     shouldFade = false;
   }
     
+  resultImage.loadPixels();
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
     if (maskedColor != 0) {
@@ -372,8 +374,7 @@ boolean overlayVideo() {
         resultImage.pixels[i] = lerpColor(source, target, ratio);
       }
     }
-  }
-  
+  }  
   resultImage.updatePixels();
   
   return true;
@@ -441,8 +442,9 @@ PImage convertSilhouette(SilhouetteFrame frame) {
 /*
  * apply the silhouette on the resultImage
  */
-void addSilhouette(PImage silhouette) {
+void addSilhouette(PImage silhouette) { 
   int maskedColor = 0;
+  resultImage.loadPixels();
   if(shouldMirrorSilouette) {
     // perform an horizontal flip of the silhouette
     int pivot = WIDTH / 2;
@@ -471,6 +473,7 @@ void addSilhouette(PImage silhouette) {
       }
     }
   }
+  resultImage.updatePixels();
 }
 
 void drawElapsedTime() {
