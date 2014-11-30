@@ -65,9 +65,54 @@ public class Renderer {
   } 
   
   /*
+   * remove weird padding from silhouette
+   */
+  PImage resizeSilhouette(PImage image) {
+    int imageWidth = WIDTH - (silhouettePadding.left + silhouettePadding.right);
+    int imageHeigth = HEIGHT - (silhouettePadding.top + silhouettePadding.bottom);
+    image = image.get(silhouettePadding.left, silhouettePadding.top, imageWidth, imageHeigth);
+    image.resize(WIDTH, HEIGHT);
+    return image;
+  }
+  
+  public void addSilhouette(PImage silhouette, PImage image) { 
+    int maskedColor = 0;
+    image.loadPixels();
+    if(shouldMirrorSilouette) {
+      // perform an horizontal flip of the silhouette
+      int pivot = WIDTH / 2;
+      int i=0, j=0;
+      for(int y=0; y<HEIGHT; y++) {
+        for(int x=0; x<pivot; x++) {
+          i = y*WIDTH + x;
+          j = y*WIDTH + (WIDTH - 1 - x);
+          // handle leftmost pixel
+          maskedColor = silhouette.pixels[i] & 0xffffff;
+          if (maskedColor > 0) {
+            image.pixels[j] = silhouette.pixels[i];       
+          }
+          // handle rigthmost pixel
+          maskedColor = silhouette.pixels[j] & 0xffffff;
+          if (maskedColor > 0) {
+            image.pixels[i] = silhouette.pixels[j];       
+          }
+        }
+      }
+    } else {
+      for (int i=0; i < silhouette.pixels.length; i++) {
+        maskedColor = silhouette.pixels[i] & 0xffffff;
+        if (maskedColor > 0) {
+          image.pixels[i] = silhouette.pixels[i];       
+        }
+      }
+    }
+    image.updatePixels();
+  }
+  
+  /*
    * process both silhouette and background video content on the result image
    */
-  protected boolean overlayVideo(SilhouetteClipManager clipMgr, PImage image) {
+  public boolean overlayVideo(SilhouetteClipManager clipMgr, PImage image) {
     SilhouetteClip currentClip = clipMgr.getCurrent();
     SilhouetteClip nextClip = clipMgr.getNext();
       

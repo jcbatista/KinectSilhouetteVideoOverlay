@@ -170,13 +170,12 @@ void processSilhouette() {
   }
 
   SilhouetteFrame silhouetteFrame = getSilhouetteFrame();
-
   PImage silhouette = convertSilhouette(silhouetteFrame);
   if(silhouette!=null) {
     if(shouldResizeSilhouette) {
-      silhouette = resizeSilhouette(silhouette); 
+      silhouette = renderer.resizeSilhouette(silhouette);
     }
-    addSilhouette(silhouette);
+    renderer.addSilhouette(silhouette, resultImage);
   }
 }
 
@@ -314,17 +313,6 @@ void addActionClip(Clip clip) {
 }
 
 /*
- * remove weird padding from silhouette
- */
-PImage resizeSilhouette(PImage image) {
-  int imageWidth = WIDTH - (silhouettePadding.left + silhouettePadding.right);
-  int imageHeigth = HEIGHT - (silhouettePadding.top + silhouettePadding.bottom);
-  image = image.get(silhouettePadding.left, silhouettePadding.top, imageWidth, imageHeigth);
-  image.resize(WIDTH, HEIGHT);
-  return image;
-}
-
-/*
  * convert the silhouette to an actual image
  */
 PImage convertSilhouette(SilhouetteFrame frame) {
@@ -351,39 +339,6 @@ PImage convertSilhouette(SilhouetteFrame frame) {
 /*
  * apply the silhouette on the resultImage
  */
-void addSilhouette(PImage silhouette) { 
-  int maskedColor = 0;
-  resultImage.loadPixels();
-  if(shouldMirrorSilouette) {
-    // perform an horizontal flip of the silhouette
-    int pivot = WIDTH / 2;
-    int i=0, j=0;
-    for(int y=0; y<HEIGHT; y++) {
-      for(int x=0; x<pivot; x++) {
-        i = y*WIDTH + x;
-        j = y*WIDTH + (WIDTH - 1 - x);
-        // handle leftmost pixel
-        maskedColor = silhouette.pixels[i] & 0xffffff;
-        if (maskedColor > 0) {
-          resultImage.pixels[j] = silhouette.pixels[i];       
-        }
-        // handle rigthmost pixel
-        maskedColor = silhouette.pixels[j] & 0xffffff;
-        if (maskedColor > 0) {
-          resultImage.pixels[i] = silhouette.pixels[j];       
-        }
-      }
-    }
-  } else {
-    for (int i=0; i < silhouette.pixels.length; i++) {
-      maskedColor = silhouette.pixels[i] & 0xffffff;
-      if (maskedColor > 0) {
-        resultImage.pixels[i] = silhouette.pixels[i];       
-      }
-    }
-  }
-  resultImage.updatePixels();
-}
 
 void drawElapsedTime() {
   if(!configMgr.showTime()) {
