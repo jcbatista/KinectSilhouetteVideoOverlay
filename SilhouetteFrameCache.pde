@@ -50,6 +50,7 @@ class SilhouetteFrame {
 class SilhouetteFrameCache {
 
   SilhouetteFrameCache(SilhouetteCacheData data) {
+    this.clock = new Clock();
     cache = new LinkedList<SilhouetteFrame>();
     enabled = data.enabled;
     minFrames = data.minFrames;
@@ -66,9 +67,13 @@ class SilhouetteFrameCache {
     }
     cache.add(frame);
     
-    if(!playbackReady && canPlayback()) {
-      println("SilhouetteFrameCache ready for playback ...");
+    if(!playbackReady && canPlayback()) {      
       playbackReady = true;
+
+      // TODO: figure out why we need the frameRate / 2 slowdown threshold
+      int frameRateGranularity =  1000 / ceil(frameRate / 2);
+      this.clock.setGranularity(frameRateGranularity);
+      println("************* SilhouetteFrameCache ready for playback, framerate: "+ int(frameRate) +" fps, clock ganularity: " + frameRateGranularity +"ms *************");
     }
   }
   
@@ -81,11 +86,24 @@ class SilhouetteFrameCache {
   }
   
   void next() {
-        int size = cache.size();
-        if(enabled && size > 0) {
-          currentFrameIndex++;
-          currentFrameIndex = (currentFrameIndex + 1) % size;
-        }
+    int size = cache.size();
+    this.clock.tick();
+    /*
+    if(clock.hasTimeChanged()) {
+      println("framecache time changed at " + clock.getCurrentTimeInSec());
+    }
+    */
+    
+    boolean timeChanged = clock.hasTimeChanged();
+    
+    if(!timeChanged && currentFrameIndex==-1) {
+      println("error: SilhouetteFrame.next(). clock.hasTimeChanged() should be true");
+    }
+    
+    if(enabled && size > 0 && timeChanged) {
+      currentFrameIndex++;
+      currentFrameIndex = (currentFrameIndex + 1) % size;
+    }
   }
   
   SilhouetteFrame getLast() {
@@ -101,13 +119,36 @@ class SilhouetteFrameCache {
     if(enabled && cache.size() > 0) {
       if(currentFrameIndex != -1) {        
         frame = cache.get(currentFrameIndex);
-      }          
+      }
+      if(frame==null) {
+        println("error: invalid frame in cache. currentFrameIndex=" + currentFrameIndex + " of " + cache.size());
+      }      
     }
-    // println("currentFrameIndex=" + currentFrameIndex + " of " + size);
+    
     return frame;
   }
-     
+  
+  void start() {      
+    println("starting using Silhouette cached frames ...");
+    isStarted = true;
+    if(currentFrameIndex==-1 && canPlayback()) {
+      currentFrameIndex = 0;
+    }
+    this.clock.reset();
+  }
+  
+  void stop() {
+    isStarted = false;
+    println("stopped using Silhouette cached frames ...");
+  }
+  
+  boolean isStarted() {
+    return isStarted;
+  }
+  
+  private Clock clock;
   private boolean enabled = false;
+  private boolean isStarted = false;
   private boolean playbackReady = false;
   private LinkedList<SilhouetteFrame> cache;
   private int currentFrameIndex = -1;

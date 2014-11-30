@@ -32,6 +32,13 @@ class ConfigManager {
           clipInfo.backgroundFilename = background;
         }
       }
+      
+      if(clipData.hasKey("duration")) {
+        int duration = clipData.getInt("duration");
+        if(duration > -1) {
+          clipInfo.duration = duration;
+        }
+      }
 
       // for now, each clip has the same crossfade value
       clipInfo.crossfade = getCrossfade();

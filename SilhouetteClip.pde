@@ -4,31 +4,35 @@ class SilhouetteClipInfo
 {
   String silhouetteFilename = "";
   String backgroundFilename = "";
+  int duration = -1; // duration in ms, use the lenght of the clip if -1
   int crossfade = 0;
 }
 
 class SilhouetteClip extends Clip {
   
-  // Note: it's asssumed that the silhouette vidoe length needs to be longer or identical to the length of the background video 
+  SilhouetteClip() {
+    super();
+  }
   
+  // Note: it's asssumed that the silhouette vidoe length needs to be longer or identical to the length of the background video   
   SilhouetteClip(SilhouetteClipInfo clipInfo)
   {
-    timeline = new Timeline();
+    super();
     this.clipInfo = clipInfo;
-    this.crossfade = clipInfo.crossfade; // adjust crossfade propertie in the baseclass
-    silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);
-    backgroundMovie = loadMovie(clipInfo.backgroundFilename);
+    this.crossfade = clipInfo.crossfade;
+    silhouetteMovie = loadMovie(clipInfo.silhouetteFilename);    
+    backgroundMovie = loadMovie(clipInfo.backgroundFilename);   
     
     // set a default movie / filename
     if(silhouetteMovie != null) {
       movie = silhouetteMovie;
-      filename =clipInfo.silhouetteFilename;
+      filename = clipInfo.silhouetteFilename;
     } else {
       movie = backgroundMovie;
       filename = clipInfo.backgroundFilename;      
     }
-    int duration = int (movie.duration() * 1000 - 300);
-    timeline.setDuration( duration );     
+        
+    setDuration(clipInfo.duration);  
   }
     
   boolean hasSilhouette() {
@@ -51,7 +55,7 @@ class SilhouetteClip extends Clip {
         backgroundMovie.volume(0);    
       }
  
-      timeline.start();
+      clock.start();
       started = true;
     }
   }
@@ -68,8 +72,24 @@ class SilhouetteClip extends Clip {
     }
   }
   
-  private SilhouetteClipInfo clipInfo;
-  private Movie silhouetteMovie; // can be null
-  private Movie backgroundMovie;
+  int getSilhouetteFrameLength() {
+    return silhouetteMovie.pixels.length;
+  }
+
+  color getSilhouettePixels(int index) {
+    return hasSilhouette() ? silhouetteMovie.pixels[index] : color(0,0,0);
+  }
+  
+  int getBackgroundFrameLength() {
+    return backgroundMovie.pixels.length;
+  }
+
+  color getBackgroundPixels(int index) {
+    return hasBackground() ? backgroundMovie.pixels[index] : color(0,0,0);
+  }
+  
+  protected SilhouetteClipInfo clipInfo;
+  protected Movie silhouetteMovie = null;
+  protected Movie backgroundMovie = null;  
 }
 

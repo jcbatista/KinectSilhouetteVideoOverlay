@@ -5,17 +5,16 @@ class Clip {
   
   Clip()
   {
-    timeline = new Timeline();
+    clock = new Clock();
     crossfade = 0;
   }
   
   Clip(String filename)
   {    
-    timeline = new Timeline();
+    clock = new Clock();
     this.filename = filename;
-    movie = loadMovie(filename);
-    int duration = (int) (movie.duration() * 1000); // in ms
-    timeline.setDuration(duration);
+    movie = loadMovie(filename);    
+    setDuration();
     started = false;
     crossfade = 0;
   }   
@@ -29,17 +28,17 @@ class Clip {
   }  
 
  boolean hasCompleted() {
-   return timeline.hasCompleted();
+   return clock.hasCompleted();
  }
  
   boolean almostCompleted() {
     // TODO refactor crossfade
-   if(timeline.getDuration()==-1 || crossfade==0) {
+   if(clock.getDuration()==-1 || crossfade==0) {
      return false;
    }
 
-   int currentTime = timeline.getCurrentTime();
-   int duration = timeline.getDuration();
+   int currentTime = clock.getCurrentTime();
+   int duration = clock.getDuration();
    return currentTime >= (duration - crossfade) && currentTime <= duration;
  }
  
@@ -47,19 +46,19 @@ class Clip {
     if(!started) {
       movie.play();
       movie.volume(0);
-      timeline.start();
+      clock.start();
       started = true;
     }
   }
   
   void tick() {
-    timeline.tick();
+    clock.tick();
   }
   
   void stop() {
      if(started) {       
        movie.stop();
-       timeline.reset();
+       clock.reset();
        started = false;
        println("clip filename=" + filename + " stopped!!");
      }     
@@ -72,38 +71,54 @@ class Clip {
   String getFilename() {
     return filename;
   }
- 
-  Movie getMovie() {
-    return movie;
+
+  int getFrameLength() {
+    return movie.pixels.length;
+  }
+
+  int getPixels(int index) {
+    return movie.pixels[index];
   }
   
   int getDuration() {
-    if(timeline.getDuration()==-1) {
+    if(clock.getDuration()==-1) {
       println("warning: duration not set for clip name=" + filename);
       return 0;
     }
-    return timeline.getDuration();
+    return clock.getDuration();
   }
   
-  void setDuration(int duration) {    
-    timeline.setDuration(duration);
+  void setDuration() {
+    setDuration(-1);
   }
+  
+  void setDuration(int duration) {
+    if(duration==-1) {
+      if(movie!=null) {
+        duration = (int) (movie.duration() * 1000); // in ms
+      } else {
+        println("warning: undefined movie for clip filename=" + filename + ". using 1 second default duration."); 
+        duration = 1000;
+      }
+    }  
+    clock.setDuration(duration);
+  } 
   
   protected Movie loadMovie(String filename) {
-    if(filename==null || filename=="") {
+    if(!Utils.isValidFilename(filename)) {
       return null;
     }  
-    Movie movie = globalLoadMovie(filename);
+    Movie movie = new Movie(getApp(), dataPath("") + "/clips/" + filename);
     movie.pause();
     // TODO: we might no longer need duration in the json.config file for action clips 
     // println(filename + " duration=" + (int) movie.duration() + "!!!!!!!!");    
     return movie; 
   }  
  
+  protected Clock clock;
+  protected Movie movie;
   protected int crossfade;
-  protected Timeline timeline; 
   protected boolean started;
   protected String filename;
-  protected Movie movie;
 }
 

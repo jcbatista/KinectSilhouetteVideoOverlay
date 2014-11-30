@@ -31,10 +31,18 @@ final int WIDTH  = 640;  // WIDTH = 1280;
 final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
 
+PShader blur;
+
 void setup() {  
+  application = this;
   
   // set black background for full screen mode
   ((JFrame) frame).getContentPane().setBackground(java.awt.Color.BLACK);  
+  
+  configMgr = new ConfigManager();  
+  scaledWidth = configMgr.getScaleWidth();
+  scaledHeight = configMgr.getScaleHeight();  
+  size(scaledWidth, scaledHeight /*, OPENGL*/);
   
   initComponents();
   initConfigSettings();
@@ -44,8 +52,9 @@ void setup() {
   LinkedList<SilhouetteClipInfo> clipList = configMgr.getClips();
   clipMgr.add(clipList); 
   
-  timeline.setDuration(clipMgr.getTotalDuration());
-  actionMgr.definePeriod(timeline.getDuration());
+  clock.setDuration(clipMgr.getTotalDuration());
+  clock.setGranularity(1000); // 1 second
+  actionMgr.definePeriod(clock.getDuration());
   
   // display all the clips available for playback
   configMgr.listClips();
@@ -54,9 +63,13 @@ void setup() {
   font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on 
   
   println("crossfade setting = " + configMgr.getCrossfade());
-  scaledWidth = configMgr.getScaleWidth();
-  scaledHeight = configMgr.getScaleHeight();
-  size(scaledWidth, configMgr.getScaleHeight());
+  
+  // TODO: try hardware accelerated blur
+  /*
+  blur = loadShader("blur.glsl");
+  blur.set("blurSize", 9);
+  blur.set("sigma", 5.0f);
+  */
 }
 
 void initKinect() {
@@ -88,12 +101,11 @@ void initKinect() {
 }
 
 void initComponents() {  
-  timeline = new CyclicalTimeline();
-  configMgr = new ConfigManager();  
+  clock = new CyclicalClock();
   oscManager = new OscManager(configMgr.getOscSettings());  
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());   
-  clipMgr = new SilhouetteClipManager(this);
-  actionMgr = new ActionClipManager(timeline, configMgr.getActionClipSettings());  
+  clipMgr = new SilhouetteClipManager();
+  actionMgr = new ActionClipManager(clock, configMgr.getActionClipSettings());  
 }
 
 void initConfigSettings() {
@@ -114,7 +126,7 @@ void draw() {
       if(shouldOverlayVideo && !clipMgr.isStarted()) {
         clipMgr.start();
         actionMgr.start();
-        timeline.start();
+        clock.start();
       }
                 
       loadPixels();
@@ -131,20 +143,23 @@ void draw() {
       }
                                       
       processSilhouette();
-              
-      //  don't display an image if video overlay failed
-      if(shouldOverlayVideo && !overlayVideo()) {
-         return; 
+                    
+      if(shouldOverlayVideo) {
+        //  don't display an image if video overlay failed
+        boolean success = overlayVideo();
+        if(!success) {
+          return; 
+        }
       }
       
       // display rendered image
       resultImage.updatePixels();
+      updatePixels();
       image(resultImage, 0, 0, scaledWidth, scaledHeight);
-      // TODO: processCenterOfMass can't be used without useKinect==true
 
-      //processCenterOfMass();      
+      processCenterOfMass();      
       drawElapsedTime();
-      timeline.tick();      
+      clock.tick();      
     } else {
       // get the Kinect color image
       PImage rgbImage = kinect.rgbImage();
@@ -156,7 +171,9 @@ void processSilhouette() {
   if(!useKinect) {
     return;
   }
-  SilhouetteFrame silhouetteFrame = getSilhouette();
+
+  SilhouetteFrame silhouetteFrame = getSilhouetteFrame();
+
   PImage silhouette = convertSilhouette(silhouetteFrame);
   if(silhouette!=null) {
     if(shouldResizeSilhouette) {
@@ -171,18 +188,33 @@ void processSilhouette() {
 void displayCenterOfMass(PVector position) {
   if(configMgr.showCenterOfMass()) {
     fill(255, 0, 0);
+    // adjust position in re-scaled image
+    float posx = position.x * scaledWidth / KINECT_WIDTH;
+    float posy = position.y * scaledHeight/ KINECT_HEIGHT;
     ellipse(position.x, position.y, 25, 25);
   }
 }
 
 void processCenterOfMass()
 {  
-  if(usingFrameCache) {
+  if(!useKinect) {
+    return;
+  }
+  
+  if(silhouetteCache.isStarted()) {
     // were using cached frames, send the cached meta data using OSC
     SilhouetteFrame frame = silhouetteCache.getCurrent();
-    for(MetaData metaData: frame.getMetaDataList()) {
-      oscManager.send(clipMgr.getCurrentIndex(), metaData.totalUsers,  metaData.userIndex, metaData.position, actionMgr.getCurrentIndex());
-      displayCenterOfMass(metaData.position);
+    if(frame!=null && frame.getMetaDataList().size()>0) {    
+      for(MetaData metaData: frame.getMetaDataList()) {
+        oscManager.send(clipMgr.getCurrentIndex(), metaData.totalUsers,  metaData.userIndex, metaData.position, actionMgr.getCurrentIndex());
+        displayCenterOfMass(metaData.position);
+      }
+    } else {
+      if(frame==null) {
+        println("warning: invalid cached SilhouetteFrame received ...");
+      }
+      // cached frame has not metadata
+      oscManager.send(clipMgr.getCurrentIndex(), 0, 0, new PVector(), actionMgr.getCurrentIndex());
     }
   } else {
     kinect.getUsers(userList);
@@ -203,6 +235,9 @@ void processCenterOfMass()
         if(frame!=null) {
           frame.addMetaData(nbUsers, i, position);
         }
+      } else {
+        // keep sending OSC data, but invalidate the position, position should be ignored in the receiver's end        
+        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, new PVector(), actionMgr.getCurrentIndex());
       }
     }
   }
@@ -211,7 +246,7 @@ void processCenterOfMass()
 /*
  * retrieves a silhouette frame ( a bitset where all the pixel that represent the silhouette are set to true )
  */
-SilhouetteFrame getSilhouette() { 
+SilhouetteFrame getSilhouetteFrame() { 
   SilhouetteFrame frame =  null;
   userMap = kinect.userMap();
   kinect.getUsers(userList);
@@ -224,11 +259,10 @@ SilhouetteFrame getSilhouette() {
     hasUserMap = false;
   }
 
-  if(userMap.length > 0 && userCount > 0) {
-       
-    if(usingFrameCache) {
+  if(userMap.length > 0 && userCount > 0) {       
+    if(silhouetteCache.isStarted()) {      
+      silhouetteCache.stop();
       println("starting using Kinect user map frames ...");
-      usingFrameCache = false;
     } 
     
     // store silhouette frame in cache
@@ -244,9 +278,8 @@ SilhouetteFrame getSilhouette() {
   } else {
     // if the cache has enough frames from playback get the current one
     if(silhouetteCache.canPlayback()) {
-      if(!usingFrameCache) {
-        println("starting using Silhouette cached frames ...");
-        usingFrameCache = true;
+      if(!silhouetteCache.isStarted()) {        
+        silhouetteCache.start();
       } 
       silhouetteCache.next();
       frame = silhouetteCache.getCurrent();
@@ -268,11 +301,11 @@ void addActionClip(Clip clip) {
   if(clip==null || !clip.isStarted()) {
     return;
   }
-  for (int i=0; i < clip.movie.pixels.length; i++) {
-     int maskedColor = clip.movie.pixels[i] & colorMask;
+  for (int i=0; i < clip.getFrameLength(); i++) {
+     int maskedColor = clip.getPixels(i) & colorMask;
      if (maskedColor != 0) {
-       float saturation = saturation(clip.movie.pixels[i]);
-       float brightness = brightness(clip.movie.pixels[i]); 
+       float saturation = saturation(clip.getPixels(i));
+       float brightness = brightness(clip.getPixels(i)); 
        if(saturation>30 && brightness>100) { 
          resultImage.pixels[i] = color(0,0,255); //maskedColor;
        }
@@ -290,12 +323,12 @@ boolean isClipValid(SilhouetteClip clip) {
     return false;
   }
   
-  if(clip.hasSilhouette() && resultImage.pixels.length!=clip.silhouetteMovie.pixels.length) {
+  if(clip.hasSilhouette() && resultImage.pixels.length!=clip.getSilhouetteFrameLength()) {
     println("warning: silhouette clip size mismatch: skipping...");
     return false;
   }
   
-  if(clip.hasBackground() && resultImage.pixels.length!=clip.backgroundMovie.pixels.length) {
+  if(clip.hasBackground() && resultImage.pixels.length!=clip.getBackgroundFrameLength()) {
     println("warning: background clip size mismatch: skipping...");
     return false;
   }
@@ -315,38 +348,38 @@ boolean overlayVideo() {
   }
   
   int corssfadePos = clipMgr.getCrossfadePosition();
-  boolean shouldFade = nextClip!=null && corssfadePos > 0 ; 
+  boolean shouldFade = nextClip!=null && corssfadePos > 0; 
   float ratio = getCrossfadeRatio(currentClip);
-
-    if(corssfadePos > 0){
-      println("crossfade pos:" + clipMgr.getCrossfadePosition()+ " ratio = " + ratio);
-    }
-  
+/*
+  if(corssfadePos > 0){
+    println("crossfade pos:" + clipMgr.getCrossfadePosition()+ " ratio = " + ratio);
+  }
+*/  
   if(shouldFade && !isClipValid(nextClip)) {
     println("warning: skipping nextClip ...");
     shouldFade = false;
   }
-  
+    
   for (int i=0; i < resultImage.pixels.length; i++) {       
     int maskedColor = resultImage.pixels[i] & colorMask;
     if (maskedColor != 0) {
       // handle silhouette
       if(!shouldFade) {
-        resultImage.pixels[i] = currentClip.hasSilhouette() ? currentClip.silhouetteMovie.pixels[i] : color(0,0,0);
+        resultImage.pixels[i] = currentClip.getSilhouettePixels(i);
       } else {
-        // handle fade
-        color source = currentClip.hasSilhouette() ? currentClip.silhouetteMovie.pixels[i] : color(0,0,0);
-        color target = nextClip.hasSilhouette() ? nextClip.silhouetteMovie.pixels[i] : color(0,0,0);        
+        // handle silhouette fade
+        color source = currentClip.getSilhouettePixels(i);
+        color target = nextClip.getSilhouettePixels(i);        
         resultImage.pixels[i] = lerpColor(source, target, ratio);
       }
     } else {
       // handle background
       if(!shouldFade) {
-        resultImage.pixels[i] = currentClip.hasBackground() ? currentClip.backgroundMovie.pixels[i] : color(0,0,0);
+        resultImage.pixels[i] = currentClip.getBackgroundPixels(i);
       } else {
-        // handle fade
-        color source = currentClip.hasBackground() ? currentClip.backgroundMovie.pixels[i] : color(0,0,0);
-        color target = nextClip.hasBackground() ? nextClip.backgroundMovie.pixels[i] : color(0,0,0);
+        // handle background fade
+        color source = currentClip.getBackgroundPixels(i);
+        color target = nextClip.getBackgroundPixels(i);
         resultImage.pixels[i] = lerpColor(source, target, ratio);
       }
     }
@@ -443,13 +476,19 @@ void drawElapsedTime() {
   textFont(font, 36);                
   fill(color(255,0,0));
   String fps = String.format("%.01f", frameRate);
-  String output = "Elapsed: " + str(timeline.getCurrentTimeInSec()) + "  fps:" + fps;
+  String output = "Elapsed: " + str(clock.getCurrentTimeInSec()) + "  fps: " + fps;
   text(output , 10, 35);  
 }
 
 // Called every time a new frame is available to read
-void movieEvent(Movie m) {
-  m.read();
+void movieEvent(Movie movie) {
+  movie.read();
+  movie.loadPixels();
+}
+
+void captureEvent(Capture captureDevice) {
+  captureDevice.read();
+  captureDevice.loadPixels();
 }
 
 void onNewUser(SimpleOpenNI curContext, int userId) {
@@ -477,17 +516,30 @@ void oscEvent(OscMessage theOscMessage) {
   */
 }
 
-// The Movie object requires a Processing applet reference, therefore it needs to remain in the main class
-Movie globalLoadMovie(String filename) {
-  return new Movie(this, dataPath("") + "/clips/" + filename);
+PApplet getApp() {
+  return application;
+}
+
+Capture getCaptureDevice() {
+  if(capture!=null) {
+    return capture;
+  }
+  try { 
+    capture = new Capture(application, KINECT_WIDTH, KINECT_HEIGHT);
+  } catch(Exception ex) {
+    println("warning: coundn't initialize capture device");
+  }
+  return capture;
 }
 
 /*
  * Members
  */
+private PApplet application;
+private Capture capture = null;
 private int scaledHeight = KINECT_HEIGHT;
 private int scaledWidth = KINECT_WIDTH;
-private Timeline timeline;
+private Clock clock;
 private SimpleOpenNI kinect; // Kinect API
 private boolean useKinect = false;
 private boolean useGPU = false;
@@ -513,5 +565,4 @@ private NetAddress myRemoteLocation;
 private IntVector userList;
 private PFont font;
 private SilhouetteFrame previousFrame = null;
-private boolean usingFrameCache = true;
 

@@ -1,23 +1,37 @@
 import java.util.LinkedList;
 
-class SilhouetteClipManager
+class SilhouetteClipFactory
 {
-  SilhouetteClipManager(PApplet applet)
-  {    
-    this.applet  = applet;
-    dataPath = dataPath("") + "/clips/";
-    clips = new LinkedList<SilhouetteClip>();
+  private boolean isLive(SilhouetteClipInfo clipInfo) {
+    boolean liveSilhouette = Utils.isLiveFilename(clipInfo.silhouetteFilename);
+    boolean liveBackground = Utils.isLiveFilename(clipInfo.backgroundFilename);   
+    return  liveSilhouette || liveBackground;     
   }
   
-  Movie LoadMovie(String filename) {
-    println("Loading clip: " + dataPath + filename);
-    return new Movie(applet,  dataPath + filename);
-  }
-
-  void add(SilhouetteClipInfo clipInfo) {
-    SilhouetteClip clip = new SilhouetteClip(clipInfo);
-    clips.add(clip);
+  public SilhouetteClip create(SilhouetteClipInfo clipInfo) {
+    SilhouetteClip clip = null;
+    if(isLive(clipInfo)) {
+      clip = new LiveClip(clipInfo);
+    } else {
+      clip = new SilhouetteClip(clipInfo);
+    }
+    return clip;
   }  
+}
+
+class SilhouetteClipManager
+{
+  SilhouetteClipManager()
+  {    
+    dataPath = dataPath("") + "/clips/";
+    clips = new LinkedList<SilhouetteClip>();
+    clipFactory = new SilhouetteClipFactory();    
+  }
+  
+  void add(SilhouetteClipInfo clipInfo) {    
+    SilhouetteClip clip = clipFactory.create(clipInfo);
+    clips.add(clip);
+  }
 
   void add(LinkedList<SilhouetteClipInfo> clipInfolist) {
     for (SilhouetteClipInfo clipInfo : clipInfolist) {
@@ -114,5 +128,5 @@ class SilhouetteClipManager
   private int currentClipIndex = -1;
   private SilhouetteClip currentClip = null;
   private SilhouetteClip nextClip = null;
-  private PApplet applet = null;
+  private SilhouetteClipFactory clipFactory;  
 };

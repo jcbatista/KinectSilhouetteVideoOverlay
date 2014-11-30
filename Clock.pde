@@ -1,4 +1,4 @@
-class CyclicalTimeline extends Timeline {
+class CyclicalClock extends Clock {
   void tick(){
     super.tick();
     if(currentTime > duration) {
@@ -8,18 +8,18 @@ class CyclicalTimeline extends Timeline {
   
   void setDuration(int duration) {        
     super.setDuration(duration);
-    println("main timeline duration set to " + duration);
+    println("main clock duration set to " + duration);
   }
-  
 }  
 
-class Timeline {  
-  Timeline() {
+class Clock {  
+  
+  Clock() {
     duration = -1; 
   }
   
   void start() {
-    reset();    
+    reset();
   }
   
   /*
@@ -28,13 +28,15 @@ class Timeline {
   void setDuration(int duration) {
     this.duration = duration;
   }
-     
+          
   void tick() {
     timeChanged = false;
-    currentTime = getEllapsedTime();   
-    if(currentTime != previousTime) {
-      timeChanged = true;
-      previousTime = currentTime;
+    currentTime = getEllapsedTime(); 
+    currentTimeSlice = (int)((double)currentTime / granularity);
+
+    if(currentTimeSlice != previousTimeSlice) {
+      previousTimeSlice = currentTimeSlice;
+      timeChanged = true;      
     }           
   }
   
@@ -54,7 +56,7 @@ class Timeline {
     return int(currentTime/1000);
   }
   
-  boolean hasCompleted() {  
+  boolean hasCompleted() {
     if(duration==-1) {
       return false;
     }  
@@ -64,24 +66,26 @@ class Timeline {
   void reset() {
     runStartTime = System.nanoTime();
     currentTime = 0;
-    previousTime = 0;
+    currentTimeSlice = 0;
+    previousTimeSlice = 0;
     timeChanged = true;
   }
   
+  void setGranularity(int value) {
+    this.granularity = value;
+  }
+  
   private int getEllapsedTime() {
-    
-    if(duration==-1) {
-      return 0;
-    }
-    
     double elapseTime = System.nanoTime() - runStartTime;
-    double ms = (double)elapseTime / 1000000d;//1000000000d;     
+    double ms = (double)elapseTime / 1000000d; //1000000000d;     
     return (int)ms;
   }
-    
+   
+  protected double granularity = 1;
   protected boolean timeChanged = false;
-  protected int duration = 0;
+  protected int duration = -1;
+  protected int currentTimeSlice = 0;
+  protected int previousTimeSlice = -1; 
   protected int currentTime = 0;
-  protected int previousTime = 0;
   protected double runStartTime = 0;     
 }
