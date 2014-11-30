@@ -63,6 +63,78 @@ public class Renderer {
     }
     return image;
   } 
+  
+  /*
+   * process both silhouette and background video content on the result image
+   */
+  protected boolean overlayVideo(SilhouetteClipManager clipMgr, PImage image) {
+    SilhouetteClip currentClip = clipMgr.getCurrent();
+    SilhouetteClip nextClip = clipMgr.getNext();
+      
+    if(!isClipValid(currentClip)) {
+      return false; 
+    }
+    
+    int corssfadePos = clipMgr.getCrossfadePosition();
+    boolean shouldFade = nextClip!=null && corssfadePos > 0; 
+    float ratio = clipMgr.getCrossfadeRatio(currentClip);
+  /*
+    if(corssfadePos > 0){
+      println("crossfade pos:" + clipMgr.getCrossfadePosition()+ " ratio = " + ratio);
+    }
+  */  
+    if(shouldFade && !isClipValid(nextClip)) {
+      println("warning: skipping nextClip ...");
+      shouldFade = false;
+    }
+      
+    image.loadPixels();
+    for (int i=0; i < image.pixels.length; i++) {       
+      int maskedColor = image.pixels[i] & colorMask;
+      if (maskedColor != 0) {
+        // handle silhouette
+        if(!shouldFade) {
+          image.pixels[i] = currentClip.getSilhouettePixels(i);
+        } else {
+          // handle silhouette fade
+          color source = currentClip.getSilhouettePixels(i);
+          color target = nextClip.getSilhouettePixels(i);        
+          image.pixels[i] = lerpColor(source, target, ratio);
+        }
+      } else {
+        // handle background
+        if(!shouldFade) {
+          image.pixels[i] = currentClip.getBackgroundPixels(i);
+        } else {
+          // handle background fade
+          color source = currentClip.getBackgroundPixels(i);
+          color target = nextClip.getBackgroundPixels(i);
+          image.pixels[i] = lerpColor(source, target, ratio);
+        }
+      }
+    }  
+    image.updatePixels();
+    
+    return true;
+  }
+
+  protected boolean isClipValid(SilhouetteClip clip) {
+    if(clip==null) {
+      return false;
+    }
+    
+    if(clip.hasSilhouette() && resultImage.pixels.length!=clip.getSilhouetteFrameLength()) {
+      println("warning: silhouette clip size mismatch: skipping...");
+      return false;
+    }
+    
+    if(clip.hasBackground() && resultImage.pixels.length!=clip.getBackgroundFrameLength()) {
+      println("warning: background clip size mismatch: skipping...");
+      return false;
+    }
+    
+    return true;
+  }
 }
 
 

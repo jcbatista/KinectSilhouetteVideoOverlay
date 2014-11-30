@@ -119,6 +119,13 @@ class SilhouetteClipManager
     return crossfadePosition;
   }
   
+  /*
+   * return the current crossfade ratio for a given clip
+   */
+  float getCrossfadeRatio(Clip clip) {
+    return getCrossfadePosition() / (frameRate * clip.getCrossfade()/1000);
+  }
+  
   boolean isStarted() { return started; }
   private boolean startCrossfade;
   private int crossfadePosition = 0;
