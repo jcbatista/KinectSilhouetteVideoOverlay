@@ -61,9 +61,7 @@ void setup() {
   
   // misc stuff
   font = createFont("Arial", 16, true); // Arial, 16 point, anti-aliasing on 
-  
   println("crossfade setting = " + configMgr.getCrossfade());
-  
 }
 
 void initKinect() {
@@ -118,50 +116,50 @@ void initConfigSettings() {
 }
 
 void draw() {    
-    if(useKinect) {
-      kinect.update();
+  if(useKinect) {
+    kinect.update();
+  }
+  if (useKinect? tracking: true) {
+    if(shouldOverlayVideo && !clipMgr.isStarted()) {
+      clipMgr.start();
+      actionMgr.start();
+      clock.start();
     }
-    if (useKinect? tracking: true) {
-      if(shouldOverlayVideo && !clipMgr.isStarted()) {
-        clipMgr.start();
-        actionMgr.start();
-        clock.start();
-      }
-                     
-      // create a buffer image that will contain the rendered content
-      resultImage = new PImage(WIDTH, HEIGHT, RGB); 
-              
-      if(actionMgr.shouldPlay()) {
-        actionMgr.next();
-        Clip actionClip = actionMgr.getCurrent();
-        renderer.addActionClip(actionClip, resultImage);
-      } else {
-        renderer.initImage(resultImage);
-      }
-                                      
-      processSilhouette();
-      
-      // blur silhouette (including silhouettes in action clips)
-      resultImage = renderer.smoothEdges(resultImage, smooth);
-                    
-      if(shouldOverlayVideo) {
-        //  don't display an image if video overlay failed
-        boolean success = renderer.overlayVideo(clipMgr, resultImage);
-        if(!success) {
-          return; 
-        }
-      }
-       
-      image(resultImage, 0, 0, scaledWidth, scaledHeight);
-
-      processCenterOfMass();      
-      drawElapsedTime();
-      clock.tick();      
+                   
+    // create a buffer image that will contain the rendered content
+    resultImage = new PImage(WIDTH, HEIGHT, RGB); 
+            
+    if(actionMgr.shouldPlay()) {
+      actionMgr.next();
+      Clip actionClip = actionMgr.getCurrent();
+      renderer.addActionClip(actionClip, resultImage);
     } else {
-      // get the Kinect color image
-      PImage rgbImage = kinect.rgbImage();
-      image(rgbImage, 0, 0, scaledWidth, scaledHeight);
+      renderer.initImage(resultImage);
     }
+                                    
+    processSilhouette();
+    
+    // blur silhouette (including silhouettes in action clips)
+    resultImage = renderer.smoothEdges(resultImage, smooth);
+                  
+    if(shouldOverlayVideo) {
+      //  don't display an image if video overlay failed
+      boolean success = renderer.overlayVideo(clipMgr, resultImage);
+      if(!success) {
+        return; 
+      }
+    }
+     
+    image(resultImage, 0, 0, scaledWidth, scaledHeight);
+
+    processCenterOfMass();      
+    drawElapsedTime();
+    clock.tick();      
+  } else {
+    // get the Kinect color image
+    PImage rgbImage = kinect.rgbImage();
+    image(rgbImage, 0, 0, scaledWidth, scaledHeight);
+  }
 }
 
 void processSilhouette() {
@@ -170,7 +168,7 @@ void processSilhouette() {
   }
 
   SilhouetteFrame silhouetteFrame = getSilhouetteFrame();
-  PImage silhouette = convertSilhouette(silhouetteFrame);
+  PImage silhouette = renderer.convertSilhouette(silhouetteFrame);
   if(silhouette!=null) {
     if(shouldResizeSilhouette) {
       silhouette = renderer.resizeSilhouette(silhouette);
@@ -282,29 +280,6 @@ SilhouetteFrame getSilhouetteFrame() {
   return frame;
 }
 
-/*
- * convert the silhouette to an actual image
- */
-PImage convertSilhouette(SilhouetteFrame frame) {
-  if(frame==null) {
-    // minimize this log message
-    if(previousFrame!=null) {
-       //println("warning. convertSilhouette(): got a null frame, ignoring ...");
-    }
-    return null;
-  }
-  previousFrame = frame;
-  PImage image = new PImage(WIDTH, HEIGHT, RGB); 
-  for (int i=0; i < frame.size(); i++) {
-    if (frame.get(i)) {
-      image.pixels[i] = color(0,0,255);       
-    } else {
-      image.pixels[i] = color(0,0,0); 
-    }
-  }
-  image.updatePixels();
-  return image;  
-}
 
 /*
  * apply the silhouette on the resultImage

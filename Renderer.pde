@@ -82,6 +82,31 @@ public class Renderer {
   }
   
   /*
+   * convert the silhouette to an actual image
+   */
+  PImage convertSilhouette(SilhouetteFrame frame) {
+    if(frame==null) {
+      // minimize this log message
+      if(previousFrame!=null) {
+         //println("warning. convertSilhouette(): got a null frame, ignoring ...");
+      }
+      return null;
+    }
+    previousFrame = frame;
+    PImage image = new PImage(WIDTH, HEIGHT, RGB);
+    image.loadPixels();
+    for (int i=0; i < frame.size(); i++) {
+      if (frame.get(i)) {
+        image.pixels[i] = color(0,0,255);       
+      } else {
+        image.pixels[i] = color(0,0,0); 
+      }
+    }
+    image.updatePixels();
+    return image;  
+  }
+  
+  /*
    * apply a blur filter on the given image
    */
   public PImage smoothEdges(PImage image, int smooth) {
