@@ -134,9 +134,9 @@ void draw() {
       if(actionMgr.shouldPlay()) {
         actionMgr.next();
         Clip actionClip = actionMgr.getCurrent();
-        addActionClip(actionClip);  
+        renderer.addActionClip(actionClip, resultImage);
       } else {
-        initResultImage();
+        renderer.initImage(resultImage);
       }
                                       
       processSilhouette();
@@ -280,36 +280,6 @@ SilhouetteFrame getSilhouetteFrame() {
     }
   }
   return frame;
-}
-
-void initResultImage() {
-  resultImage.loadPixels();
-  Arrays.fill(pixels,  color(0,0,0));
-  resultImage.updatePixels();
-  
-  // background(color(0,0,0));
-  // resultImage = get(0, 0, KINECT_WIDTH, KINECT_HEIGHT);
-}
-
-/*
- * apply the action clip on the result image
- */
-void addActionClip(Clip clip) {
-  if(clip==null || !clip.isStarted()) {
-    return;
-  }
-  resultImage.loadPixels();
-  for (int i=0; i < clip.getFrameLength(); i++) {
-     int maskedColor = clip.getPixels(i) & colorMask;
-     if (maskedColor != 0) {
-       float saturation = saturation(clip.getPixels(i));
-       float brightness = brightness(clip.getPixels(i)); 
-       if(saturation>30 && brightness>100) { 
-         resultImage.pixels[i] = color(0,0,255); //maskedColor;
-       }
-     }
-  }
-  resultImage.updatePixels();
 }
 
 /*

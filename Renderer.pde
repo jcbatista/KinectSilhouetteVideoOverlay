@@ -54,6 +54,33 @@ public class Renderer {
     println("Using *DEFAULT* renderer!!!");
   }
   
+  public void initImage(PImage image) {
+    image.loadPixels();
+    Arrays.fill(image.pixels,  color(0,0,0));
+    image.updatePixels();
+  }
+  
+  /*
+   * apply the action clip on the result image
+   */
+  public void addActionClip(Clip clip, PImage image) {
+    if(clip==null || !clip.isStarted()) {
+      return;
+    }
+    image.loadPixels();
+    for (int i=0; i < clip.getFrameLength(); i++) {
+       int maskedColor = clip.getPixels(i) & colorMask;
+       if (maskedColor != 0) {
+         float saturation = saturation(clip.getPixels(i));
+         float brightness = brightness(clip.getPixels(i)); 
+         if(saturation>30 && brightness>100) { 
+           image.pixels[i] = color(0,0,255); //maskedColor;
+         }
+       }
+    }
+    image.updatePixels();
+  }
+  
   /*
    * apply a blur filter on the given image
    */
@@ -67,7 +94,7 @@ public class Renderer {
   /*
    * remove weird padding from silhouette
    */
-  PImage resizeSilhouette(PImage image) {
+  public PImage resizeSilhouette(PImage image) {
     int imageWidth = WIDTH - (silhouettePadding.left + silhouettePadding.right);
     int imageHeigth = HEIGHT - (silhouettePadding.top + silhouettePadding.bottom);
     image = image.get(silhouettePadding.left, silhouettePadding.top, imageWidth, imageHeigth);
