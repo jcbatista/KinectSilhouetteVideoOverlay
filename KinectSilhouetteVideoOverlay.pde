@@ -1,5 +1,6 @@
 import javax.swing.JFrame;
 import java.util.LinkedList;
+import java.util.Arrays;
 import processing.video.*;
 import processing.opengl.*; 
 import SimpleOpenNI.*;
@@ -31,22 +32,20 @@ final int WIDTH  = 640;  // WIDTH = 1280;
 final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
 
-PShader blur;
-PGraphics pass1, pass2;
-
 void setup() {  
   application = this;
-  
+  println("Java version = " + System.getProperty("java.version"));
+    
   // set black background for full screen mode
   ((JFrame) frame).getContentPane().setBackground(java.awt.Color.BLACK);  
   
   configMgr = new ConfigManager();  
   scaledWidth = configMgr.getScaleWidth();
   scaledHeight = configMgr.getScaleHeight();  
-  size(scaledWidth, scaledHeight, P2D);
   
-  initComponents();
+  // Note: init order is important!
   initConfigSettings();
+  initComponents();
   initKinect();
     
   // init silhouette related videos  
@@ -65,26 +64,19 @@ void setup() {
   
   println("crossfade setting = " + configMgr.getCrossfade());
   
-  // init hardware accelerated blur 
-  // TODO: refactor this  
-  blur = loadShader("blur.glsl");
-  blur.set("blurSize", 60);
-  blur.set("sigma", 2f); 
-  
-  pass1 = createGraphics(KINECT_WIDTH, KINECT_HEIGHT, P2D);
-  pass1.noSmooth();  
-  
-  pass2 = createGraphics(KINECT_WIDTH, KINECT_HEIGHT, P2D);
-  pass2.noSmooth();
 }
 
 void initKinect() {
+  if(!useKinect) {
+    return;
+  }
+  
   kinect = new SimpleOpenNI(this, SimpleOpenNI.RUN_MODE_MULTI_THREADED);
   if(kinect.isInit() == false) {  
      println("Can't init SimpleOpenNI, maybe the camera is not connected!"); 
      exit(); 
   } 
-
+ 
   // enable depthMap generation 
   kinect.enableDepth();
    
@@ -108,9 +100,16 @@ void initComponents() {
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());   
   clipMgr = new SilhouetteClipManager();
   actionMgr = new ActionClipManager(clock, configMgr.getActionClipSettings());  
+  if(useGPU) {
+    renderer = new GpuRenderer(scaledWidth, scaledHeight);
+  } else {
+    renderer = new Renderer(scaledWidth, scaledHeight);
+  }
 }
 
 void initConfigSettings() {
+  useKinect = configMgr.useKinect();
+  useGPU = configMgr.useGPU();
   shouldOverlayVideo = configMgr.overlayVideo();
   shouldResizeSilhouette = configMgr.resizeSilhouette();
   shouldMirrorSilouette = configMgr.mirrorSilhouette();
@@ -119,8 +118,10 @@ void initConfigSettings() {
 }
 
 void draw() {    
-    kinect.update();
-    if (tracking) {
+    if(useKinect) {
+      kinect.update();
+    }
+    if (useKinect? tracking: true) {
       if(shouldOverlayVideo && !clipMgr.isStarted()) {
         clipMgr.start();
         actionMgr.start();
@@ -139,6 +140,9 @@ void draw() {
       }
                                       
       processSilhouette();
+      
+      // blur silhouette (including silhouettes in action clips)
+      resultImage = renderer.smoothEdges(resultImage, smooth);
                     
       if(shouldOverlayVideo) {
         //  don't display an image if video overlay failed
@@ -161,7 +165,12 @@ void draw() {
 }
 
 void processSilhouette() {
+  if(!useKinect) {
+    return;
+  }
+
   SilhouetteFrame silhouetteFrame = getSilhouetteFrame();
+
   PImage silhouette = convertSilhouette(silhouetteFrame);
   if(silhouette!=null) {
     if(shouldResizeSilhouette) {
@@ -169,7 +178,6 @@ void processSilhouette() {
     }
     addSilhouette(silhouette);
   }
-  resultImage = smoothEdges(resultImage); 
 }
 
 void displayCenterOfMass(PVector position) {
@@ -184,6 +192,10 @@ void displayCenterOfMass(PVector position) {
 
 void processCenterOfMass()
 {  
+  if(!useKinect) {
+    return;
+  }
+  
   if(silhouetteCache.isStarted()) {
     // were using cached frames, send the cached meta data using OSC
     SilhouetteFrame frame = silhouetteCache.getCurrent();
@@ -272,15 +284,12 @@ SilhouetteFrame getSilhouetteFrame() {
 }
 
 void initResultImage() {
-  
   resultImage.loadPixels();
-  for (int i=0; i < KINECT_WIDTH * KINECT_HEIGHT; i++) {
-   resultImage.pixels[i] = color(0,0,0);
-  }
+  Arrays.fill(pixels,  color(0,0,0));
   resultImage.updatePixels();
   
-  //background(color(0,0,0));
-  //resultImage = get(0, 0, KINECT_WIDTH, KINECT_HEIGHT);
+  // background(color(0,0,0));
+  // resultImage = get(0, 0, KINECT_WIDTH, KINECT_HEIGHT);
 }
 
 /*
@@ -388,30 +397,6 @@ PImage resizeSilhouette(PImage image) {
   int imageHeigth = HEIGHT - (silhouettePadding.top + silhouettePadding.bottom);
   image = image.get(silhouettePadding.left, silhouettePadding.top, imageWidth, imageHeigth);
   image.resize(WIDTH, HEIGHT);
-  return image;
-}
-
-/*
- * apply a blur filter on the given image
- */
-PImage smoothEdges(PImage image) {
-  if(smooth > 0) {
-    //image.filter(BLUR, smooth);
-      // Applying the blur shader along the vertical direction   
-  blur.set("horizontalPass", 0);
-  pass1.beginDraw();            
-  pass1.shader(blur);  
-  pass1.image(image, 0, 0);
-  pass1.endDraw();
-  
-  // Applying the blur shader along the horizontal direction      
-  blur.set("horizontalPass", 1);
-  pass2.beginDraw();            
-  pass2.shader(blur);  
-  pass2.image(pass1, 0, 0);
-  pass2.endDraw();    
-  image = pass2.get();  
-  }
   return image;
 }
 
@@ -543,11 +528,14 @@ Capture getCaptureDevice() {
  * Members
  */
 private PApplet application;
+private Renderer renderer = null;
 private Capture capture = null;
 private int scaledHeight = KINECT_HEIGHT;
 private int scaledWidth = KINECT_WIDTH;
 private Clock clock;
 private SimpleOpenNI kinect; // Kinect API
+private boolean useKinect = false;
+private boolean useGPU = false;
 private boolean hasUserMap = false;
 private SilhouetteClipManager clipMgr; 
 private ConfigManager configMgr;
