@@ -1,4 +1,7 @@
-public class RendererFactory {
+import java.util.concurrent.*;
+import java.util.List;
+
+public class RendererFactory {  
   public RendererFactory(int width, int height) {
     this.width = width;
     this.height = height;
@@ -67,10 +70,40 @@ public class GpuRenderer extends Renderer {
 }
 
 public class Renderer {
+  
+  private ExecutorService exec;
+  private List<Range> ranges;
+  
   private Renderer() {}
   public Renderer(int width, int height) {
     application.size(width, height);
-    println("Using *DEFAULT* renderer!!!");
+    threadCount = Runtime.getRuntime().availableProcessors();
+    if(!useThreads()) {
+      threadCount = 1;
+      // TODO: requires smarter logic
+      println("available number of processors isn't a valid display size multiplier");
+    }
+    exec = Executors.newFixedThreadPool(threadCount);
+    initRanges();
+    println("Using *DEFAULT* renderer!!! with " + threadCount + " threads");
+  }
+  
+  boolean useThreads() {
+    return (size()%threadCount)==0;
+  }
+  
+  int size() { 
+    return KINECT_WIDTH * KINECT_HEIGHT;
+  }
+  
+  void initRanges() {
+    ranges = new LinkedList<Range>();
+    int length = size() / threadCount;
+    for( int i=0; i<threadCount; i++ ) {
+      int start = i * length;
+  println("initRange() start=" + start + " length=" + length + " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      ranges.add(new Range(start, length));
+    }
   }
   
   public void initImage(PImage image) {
@@ -86,7 +119,7 @@ public class Renderer {
     if(clip==null || !clip.isStarted()) {
       return;
     }
-    image.loadPixels();
+    image.loadPixels(); 
     for (int i=0; i < clip.getFrameLength(); i++) {
        int maskedColor = clip.getPixels(i) & colorMask;
        if (maskedColor != 0) {
@@ -172,6 +205,55 @@ public class Renderer {
     image.updatePixels();
   }
   
+  class VideoOverlay implements Callable<Void> {
+    SilhouetteClip currentClip;
+    SilhouetteClip nextClip;
+    PImage image;
+    Range range;
+    boolean shouldFade;
+    float ratio;
+    
+    VideoOverlay(SilhouetteClip currentClip, SilhouetteClip nextClip, PImage image, Range range, boolean shouldFade, float ratio) {
+      this.currentClip = currentClip;
+      this.nextClip = nextClip;
+      this.image = image;
+      this.range = range;
+      this.shouldFade = shouldFade;
+      this.ratio = ratio;
+    }
+    
+    Void call() {
+     //println("VideoOverlay.call() running start=" + range.getStart() + " length=" + range.getLength());
+     int start = range.getStart();
+     int stop = range.getStop();
+     for (int i=start; i <= stop; i++) {      
+          int maskedColor = image.pixels[i] & colorMask;
+          if (maskedColor != 0) {
+            // handle silhouette
+            if(!shouldFade) {
+              image.pixels[i] = currentClip.getSilhouettePixels(i);
+            } else {
+              // handle silhouette fade
+              color source = currentClip.getSilhouettePixels(i);
+              color target = nextClip.getSilhouettePixels(i);        
+              image.pixels[i] = lerpColor(source, target, ratio);
+            }
+          } else {
+            // handle background
+            if(!shouldFade) {
+              image.pixels[i] = currentClip.getBackgroundPixels(i);
+            } else {
+              // handle background fade
+              color source = currentClip.getBackgroundPixels(i);
+              color target = nextClip.getBackgroundPixels(i);
+              image.pixels[i] = lerpColor(source, target, ratio);
+            }
+          }
+        }
+    return null;  
+    } 
+  }
+  
   /*
    * process both silhouette and background video content on the result image
    */
@@ -195,34 +277,20 @@ public class Renderer {
       println("warning: skipping nextClip ...");
       shouldFade = false;
     }
-      
-    image.loadPixels();
-    for (int i=0; i < image.pixels.length; i++) {       
-      int maskedColor = image.pixels[i] & colorMask;
-      if (maskedColor != 0) {
-        // handle silhouette
-        if(!shouldFade) {
-          image.pixels[i] = currentClip.getSilhouettePixels(i);
-        } else {
-          // handle silhouette fade
-          color source = currentClip.getSilhouettePixels(i);
-          color target = nextClip.getSilhouettePixels(i);        
-          image.pixels[i] = lerpColor(source, target, ratio);
-        }
-      } else {
-        // handle background
-        if(!shouldFade) {
-          image.pixels[i] = currentClip.getBackgroundPixels(i);
-        } else {
-          // handle background fade
-          color source = currentClip.getBackgroundPixels(i);
-          color target = nextClip.getBackgroundPixels(i);
-          image.pixels[i] = lerpColor(source, target, ratio);
-        }
-      }
-    }  
-    image.updatePixels();
     
+    List<VideoOverlay> todo = new ArrayList<VideoOverlay>(ranges.size());
+    for(Range range: ranges) {
+      VideoOverlay videoOverlay = new VideoOverlay(currentClip, nextClip, image, range, shouldFade, ratio);
+        todo.add(videoOverlay);
+    }
+    image.loadPixels();
+    try {
+      exec.invokeAll(todo);
+    } catch(Exception ex) {
+      println("Houston!!!");
+    } finally {
+      image.updatePixels();
+    }
     return true;
   }
 
@@ -243,6 +311,8 @@ public class Renderer {
     
     return true;
   }
+
+  private int threadCount = 1;
 }
 
 
