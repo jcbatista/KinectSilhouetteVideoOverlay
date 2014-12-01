@@ -1,8 +1,28 @@
+public class RendererFactory {
+  public RendererFactory(int width, int height) {
+    this.width = width;
+    this.height = height;
+  }
+  
+  public  Renderer create(boolean useGpu) {
+    Renderer renderer = null;
+    if(useGpu) {
+      renderer = new GpuRenderer(this.width, this.height);
+    } else {
+      renderer = new Renderer(this.width, this.height);
+    }
+    return renderer;
+  }
+  
+  private int width;
+  private int height;
+}
+
 public class GpuRenderer extends Renderer {
   private GpuRenderer() {}
   
-  public GpuRenderer(int w, int h) {
-    application.size(w, h, P2D);
+  public GpuRenderer(int width, int height) {
+    application.size(width, height, OPENGL);
     
     // init hardware accelerated blur 
     blur = loadShader("shaders/blur.glsl");
@@ -49,8 +69,8 @@ public class GpuRenderer extends Renderer {
 
 public class Renderer {
   private Renderer() {}
-  public Renderer(int w, int h) {
-    application.size(w, h);
+  public Renderer(int width, int height) {
+    application.size(width, height);
     println("Using *DEFAULT* renderer!!!");
   }
   

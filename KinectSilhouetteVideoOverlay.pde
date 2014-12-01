@@ -98,16 +98,12 @@ void initComponents() {
   silhouetteCache = new SilhouetteFrameCache(configMgr.getSilhouetteCacheSettings());   
   clipMgr = new SilhouetteClipManager();
   actionMgr = new ActionClipManager(clock, configMgr.getActionClipSettings());  
-  if(useGPU) {
-    renderer = new GpuRenderer(scaledWidth, scaledHeight);
-  } else {
-    renderer = new Renderer(scaledWidth, scaledHeight);
-  }
+  renderer = new RendererFactory(scaledWidth, scaledHeight).create(useGpu);
 }
 
 void initConfigSettings() {
   useKinect = configMgr.useKinect();
-  useGPU = configMgr.useGPU();
+  useGpu = configMgr.useGpu();
   shouldOverlayVideo = configMgr.overlayVideo();
   shouldResizeSilhouette = configMgr.resizeSilhouette();
   shouldMirrorSilouette = configMgr.mirrorSilhouette();
@@ -359,7 +355,7 @@ private int scaledWidth = KINECT_WIDTH;
 private Clock clock;
 private SimpleOpenNI kinect; // Kinect API
 private boolean useKinect = false;
-private boolean useGPU = false;
+private boolean useGpu = false;
 private boolean hasUserMap = false;
 private SilhouetteClipManager clipMgr; 
 private ConfigManager configMgr;

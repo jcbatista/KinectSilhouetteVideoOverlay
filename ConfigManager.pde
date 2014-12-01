@@ -58,8 +58,8 @@ class ConfigManager {
   /*
    * set to true if we should be off-loading some procesing to the GPU, returns false by default
    */
-  boolean useGPU() {
-    return configJSON.hasKey("useGPU") ? configJSON.getBoolean("useGPU"): false;
+  boolean useGpu() {
+    return configJSON.hasKey("useGpu") ? configJSON.getBoolean("useGpu"): false;
   }
   // return an identifier for the installation (since there could be multiple Kinects/Projectors) 
   String getName() {
