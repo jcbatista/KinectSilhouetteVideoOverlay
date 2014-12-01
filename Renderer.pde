@@ -73,6 +73,7 @@ public class Renderer {
   
   private ExecutorService exec;
   private List<Range> ranges;
+  private List<VideoOverlay> videoOverlayThreads;
   
   private Renderer() {}
   public Renderer(int width, int height) {
@@ -85,7 +86,8 @@ public class Renderer {
     }
     exec = Executors.newFixedThreadPool(threadCount);
     initRanges();
-    println("Using *DEFAULT* renderer!!! with " + threadCount + " threads");
+    initThreadFuncs();
+    println("Using *DEFAULT* renderer with " + threadCount + " threads !!!");
   }
   
   boolean useThreads() {
@@ -101,8 +103,16 @@ public class Renderer {
     int length = size() / threadCount;
     for( int i=0; i<threadCount; i++ ) {
       int start = i * length;
-  println("initRange() start=" + start + " length=" + length + " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      println("Renderer.initRange() start=" + start + " length=" + length);
       ranges.add(new Range(start, length));
+    }
+  }
+  
+  void initThreadFuncs() {
+    videoOverlayThreads = new ArrayList<VideoOverlay>(ranges.size());
+    for(Range range: ranges) {
+      VideoOverlay videoOverlay = new VideoOverlay(range);
+      videoOverlayThreads.add(videoOverlay);
     }
   }
   
@@ -213,11 +223,14 @@ public class Renderer {
     boolean shouldFade;
     float ratio;
     
-    VideoOverlay(SilhouetteClip currentClip, SilhouetteClip nextClip, PImage image, Range range, boolean shouldFade, float ratio) {
+    VideoOverlay(Range range) {
+      this.range = range;
+    }
+    
+    private void init(SilhouetteClip currentClip, SilhouetteClip nextClip, PImage image, boolean shouldFade, float ratio) {
       this.currentClip = currentClip;
       this.nextClip = nextClip;
       this.image = image;
-      this.range = range;
       this.shouldFade = shouldFade;
       this.ratio = ratio;
     }
@@ -227,30 +240,30 @@ public class Renderer {
      int start = range.getStart();
      int stop = range.getStop();
      for (int i=start; i <= stop; i++) {      
-          int maskedColor = image.pixels[i] & colorMask;
-          if (maskedColor != 0) {
-            // handle silhouette
-            if(!shouldFade) {
-              image.pixels[i] = currentClip.getSilhouettePixels(i);
-            } else {
-              // handle silhouette fade
-              color source = currentClip.getSilhouettePixels(i);
-              color target = nextClip.getSilhouettePixels(i);        
-              image.pixels[i] = lerpColor(source, target, ratio);
-            }
+        int maskedColor = image.pixels[i] & colorMask;
+        if (maskedColor != 0) {
+          // handle silhouette
+          if(!shouldFade) {
+            image.pixels[i] = currentClip.getSilhouettePixels(i);
           } else {
-            // handle background
-            if(!shouldFade) {
-              image.pixels[i] = currentClip.getBackgroundPixels(i);
-            } else {
-              // handle background fade
-              color source = currentClip.getBackgroundPixels(i);
-              color target = nextClip.getBackgroundPixels(i);
-              image.pixels[i] = lerpColor(source, target, ratio);
-            }
+            // handle silhouette fade
+            color source = currentClip.getSilhouettePixels(i);
+            color target = nextClip.getSilhouettePixels(i);        
+            image.pixels[i] = lerpColor(source, target, ratio);
+          }
+        } else {
+          // handle background
+          if(!shouldFade) {
+            image.pixels[i] = currentClip.getBackgroundPixels(i);
+          } else {
+            // handle background fade
+            color source = currentClip.getBackgroundPixels(i);
+            color target = nextClip.getBackgroundPixels(i);
+            image.pixels[i] = lerpColor(source, target, ratio);
           }
         }
-    return null;  
+      }
+      return null;  
     } 
   }
   
@@ -268,24 +281,25 @@ public class Renderer {
     int corssfadePos = clipMgr.getCrossfadePosition();
     boolean shouldFade = nextClip!=null && corssfadePos > 0; 
     float ratio = clipMgr.getCrossfadeRatio(currentClip);
-  /*
-    if(corssfadePos > 0){
-      println("crossfade pos:" + clipMgr.getCrossfadePosition()+ " ratio = " + ratio);
-    }
-  */  
+    
+    /*
+      if(corssfadePos > 0){
+        println("crossfade pos:" + clipMgr.getCrossfadePosition()+ " ratio = " + ratio);
+      }
+    */
+    
     if(shouldFade && !isClipValid(nextClip)) {
       println("warning: skipping nextClip ...");
       shouldFade = false;
     }
     
-    List<VideoOverlay> todo = new ArrayList<VideoOverlay>(ranges.size());
-    for(Range range: ranges) {
-      VideoOverlay videoOverlay = new VideoOverlay(currentClip, nextClip, image, range, shouldFade, ratio);
-        todo.add(videoOverlay);
+    for(VideoOverlay videoOverlayThread: videoOverlayThreads) {
+      videoOverlayThread.init(currentClip, nextClip, image, shouldFade, ratio);
     }
+    
     image.loadPixels();
     try {
-      exec.invokeAll(todo);
+      exec.invokeAll(videoOverlayThreads);
     } catch(Exception ex) {
       println("Houston!!!");
     } finally {
