@@ -4,7 +4,7 @@ public class RendererFactory {
     this.height = height;
   }
   
-  public  Renderer create(boolean useGpu) {
+  public Renderer create(boolean useGpu) {
     Renderer renderer = null;
     if(useGpu) {
       renderer = new GpuRenderer(this.width, this.height);
@@ -37,7 +37,6 @@ public class GpuRenderer extends Renderer {
     
     println("Using *GPU* renderer!!!");
   }
-  
   
   /*
    * apply a  hardware accelerated blur filter on the given image
@@ -105,14 +104,6 @@ public class Renderer {
    * convert the silhouette to an actual image
    */
   PImage convertSilhouette(SilhouetteFrame frame) {
-    if(frame==null) {
-      // minimize this log message
-      if(previousFrame!=null) {
-         //println("warning. convertSilhouette(): got a null frame, ignoring ...");
-      }
-      return null;
-    }
-    previousFrame = frame;
     PImage image = new PImage(WIDTH, HEIGHT, RGB);
     image.loadPixels();
     for (int i=0; i < frame.size(); i++) {

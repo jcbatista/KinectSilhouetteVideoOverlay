@@ -164,6 +164,8 @@ void processSilhouette() {
   }
 
   SilhouetteFrame silhouetteFrame = getSilhouetteFrame();
+  // Note: the convert silhouette operation CANNOT be merged with the overlay video
+  //       because the intermediate resize operation 
   PImage silhouette = renderer.convertSilhouette(silhouetteFrame);
   if(silhouette!=null) {
     if(shouldResizeSilhouette) {
@@ -377,5 +379,4 @@ private PImage resultImage;
 private NetAddress myRemoteLocation;
 private IntVector userList;
 private PFont font;
-private SilhouetteFrame previousFrame = null;
 
