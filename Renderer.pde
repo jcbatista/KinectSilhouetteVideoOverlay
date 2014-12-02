@@ -74,16 +74,58 @@ public class Renderer {
   private ExecutorService exec;
   private List<Range> ranges;
   private List<VideoOverlay> videoOverlayThreads;
+  private List<ActionClipAdder> clipAdderThreads;
+  
+  class ActionClipAdder implements Callable<Void> {
+    PImage image;
+    Range range;
+    Clip clip;
+    
+    ActionClipAdder(Range range) {
+      this.range = range;
+    }
+    
+    void init(Clip clip, PImage image) {
+      this.clip = clip;
+      this.image = image;
+    }
+    
+    Void call() {
+     // println("ActionClipAdder.call() running start=" + range.getStart() + " stop=" + range.getStop() + " length=" + range.getLength()+ " frame=" + clip.getFrameLength()  );
+     if(clip.getFrameLength() != (640*480)) {
+     println("clip.getFrameLength()=" + clip.getFrameLength());
+     }
+     
+     int start = range.getStart();
+     int stop = min(range.getStop(), clip.getFrameLength());
+      for (int i=start; i <= stop; i++) {
+         int maskedColor = clip.getPixels(i) & colorMask;
+         if (maskedColor != 0) {
+           float saturation = saturation(clip.getPixels(i));
+           float brightness = brightness(clip.getPixels(i)); 
+           if(saturation>30 && brightness>100) { 
+             image.pixels[i] = color(0,0,255); //maskedColor;
+           }
+         }
+       }
+       return null;
+    }
+  }
+  
   
   private Renderer() {}
   public Renderer(int width, int height) {
     application.size(width, height);
     threadCount = Runtime.getRuntime().availableProcessors();
+   
     if(!useThreads()) {
       threadCount = 1;
       // TODO: requires smarter logic
       println("available number of processors isn't a valid display size multiplier");
     }
+    
+    //threadCount = 1;
+    
     exec = Executors.newFixedThreadPool(threadCount);
     initRanges();
     initThreadFuncs();
@@ -110,9 +152,10 @@ public class Renderer {
   
   void initThreadFuncs() {
     videoOverlayThreads = new ArrayList<VideoOverlay>(ranges.size());
+    clipAdderThreads = new ArrayList<ActionClipAdder>(ranges.size());
     for(Range range: ranges) {
-      VideoOverlay videoOverlay = new VideoOverlay(range);
-      videoOverlayThreads.add(videoOverlay);
+      clipAdderThreads.add( new ActionClipAdder(range));
+      videoOverlayThreads.add( new VideoOverlay(range));
     }
   }
   
@@ -129,18 +172,19 @@ public class Renderer {
     if(clip==null || !clip.isStarted()) {
       return;
     }
-    image.loadPixels(); 
-    for (int i=0; i < clip.getFrameLength(); i++) {
-       int maskedColor = clip.getPixels(i) & colorMask;
-       if (maskedColor != 0) {
-         float saturation = saturation(clip.getPixels(i));
-         float brightness = brightness(clip.getPixels(i)); 
-         if(saturation>30 && brightness>100) { 
-           image.pixels[i] = color(0,0,255); //maskedColor;
-         }
-       }
+    
+    for(ActionClipAdder clipAdderThread: clipAdderThreads) {
+      clipAdderThread.init(clip, image);
     }
-    image.updatePixels();
+    
+    image.loadPixels();
+    try {
+      exec.invokeAll(clipAdderThreads);
+    } catch(Exception ex) {
+      println("Houston!!!");
+    } finally {
+      image.updatePixels();
+    }
   }
   
   /*
