@@ -20,8 +20,18 @@ class OscManager {
     oscP5 = new OscP5(this, data.serverPort, OscP5.UDP);
     myRemoteLocation = new NetAddress(data.clientAddress, data.clientPort);
   }
-    
-  void send(int clipIndex, int totalUsers, int userIndex, PVector position, int actionClipIndex) {
+  
+  /**  
+   * send: broadcast scene information over OSC
+   *
+   * @param clipIndex: index of the clip that's currently playing
+   * @param totalUsers: total users currently tracked in the scene
+   * @param userIndex: the user we're sending coordinates for
+   * @param position: x,y,z coordinates of the user identified by userIndex 
+   * @param actionClipIndex: index of the Action Clip currently playing
+   * @param displayMode: { 0 <= Live Kinect, 1 <= Cached Silhouette }
+   */
+  void send(int clipIndex, int totalUsers, int userIndex, PVector position, int actionClipIndex, int displayMode) {
     if(!enabled)
       return;
     
@@ -33,6 +43,7 @@ class OscManager {
     msg.add(position.y);
     msg.add(position.z);
     msg.add(actionClipIndex);
+    msg.add(displayMode);
     oscP5.send(msg, myRemoteLocation); 
   }
   
