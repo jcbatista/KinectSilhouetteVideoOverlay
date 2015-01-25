@@ -187,7 +187,7 @@ void displayCenterOfMass(PVector position) {
 
 void processCenterOfMass()
 {  
-  if(!useKinect) {
+  if(!useKinect || clipMgr.getCurrent()==null) {
     return;
   }
   
@@ -219,7 +219,6 @@ void processCenterOfMass()
       if(!Float.isNaN(position.x)) {
         // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
         displayCenterOfMass(position);
-        
         oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position, actionMgr.getCurrentIndex(), LIVE);
         SilhouetteFrame frame = silhouetteCache.getLast();
         if(frame!=null) {

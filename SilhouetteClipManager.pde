@@ -21,6 +21,7 @@ class SilhouetteClipFactory
 
 class SilhouetteClipManager
 {
+ 
   SilhouetteClipManager()
   {    
     dataPath = dataPath("") + "/clips/";
@@ -104,7 +105,11 @@ class SilhouetteClipManager
   }
   
   int getCurrentIndex() {
-    return currentClip!=null && currentClip.almostCompleted() ? nextClipIndex(): currentClipIndex;
+    int index = currentClipIndex;
+    if(currentClip.almostCompleted() || currentClip.hasCompleted()) {
+      index = nextClipIndex();
+    }
+    return index;
   }
   
   int getTotalDuration() {
