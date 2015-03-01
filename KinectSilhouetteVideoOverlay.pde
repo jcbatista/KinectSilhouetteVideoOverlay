@@ -185,6 +185,42 @@ void displayCenterOfMass(PVector position) {
   }
 }
 
+void processLiveUserPositionData() {  
+    kinect.getUsers(userList);
+    int nbUsers = int(userList.size());
+    boolean hasData = false;
+    PVector cumulatedPosition = new PVector();
+    for(int i=0; i<nbUsers; i++) {
+      int userId = userList.get(i);
+      PVector position = new PVector();
+      kinect.getCoM(userId, position); // CoM <= Center Of Mass
+      kinect.convertRealWorldToProjective(position, position);
+      
+      if(!Float.isNaN(position.x)) {
+        // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
+        displayCenterOfMass(position);
+        // TODO: add a parameter to toggle between cumulated position and individual user position
+        // oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position, actionMgr.getCurrentIndex(), LIVE);
+        cumulatedPosition.add(position);
+        SilhouetteFrame frame = silhouetteCache.getLast();
+        if(frame!=null) {
+          frame.addMetaData(nbUsers, i, position);
+        }
+      } else {
+        // keep sending OSC data, but invalidate the position, position should be ignored in the receiver's end        
+        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, new PVector(), actionMgr.getCurrentIndex(), LIVE);
+      }
+    }
+    
+    // send only the cumulated position
+    // TODO: see above TODO!
+    if(hasData) {
+      oscManager.send(clipMgr.getCurrentIndex(), nbUsers, 0, cumulatedPosition, actionMgr.getCurrentIndex(), LIVE);
+    }
+
+}
+
+
 void processCenterOfMass()
 {  
   if(!useKinect || clipMgr.getCurrent()==null) {
@@ -207,28 +243,7 @@ void processCenterOfMass()
       oscManager.send(clipMgr.getCurrentIndex(), 0, 0, new PVector(), actionMgr.getCurrentIndex(), CACHED);
     }
   } else {
-    kinect.getUsers(userList);
-    int nbUsers = int(userList.size());
-  
-    for(int i=0; i<nbUsers; i++) {
-      int userId = userList.get(i);
-      PVector position = new PVector();
-      kinect.getCoM(userId, position); // CoM <= Center Of Mass
-      kinect.convertRealWorldToProjective(position, position);
-      
-      if(!Float.isNaN(position.x)) {
-        // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
-        displayCenterOfMass(position);
-        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position, actionMgr.getCurrentIndex(), LIVE);
-        SilhouetteFrame frame = silhouetteCache.getLast();
-        if(frame!=null) {
-          frame.addMetaData(nbUsers, i, position);
-        }
-      } else {
-        // keep sending OSC data, but invalidate the position, position should be ignored in the receiver's end        
-        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, new PVector(), actionMgr.getCurrentIndex(), LIVE);
-      }
-    }
+    processLiveUserPositionData();
   }
 }
 
