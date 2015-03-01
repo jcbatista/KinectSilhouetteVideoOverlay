@@ -185,6 +185,16 @@ void displayCenterOfMass(PVector position) {
   }
 }
 
+boolean isPositionValid(PVector position) {
+   if(Float.isNaN(position.x) || Float.isNaN(position.y) || Float.isNaN(position.z))
+     return false;
+   
+   if(position.x==0 && position.y==0 && position.z==0)
+     return false;
+     
+   return true; 
+}
+
 void processLiveUserPositionData() {  
     kinect.getUsers(userList);
     int nbUsers = int(userList.size());
@@ -195,8 +205,7 @@ void processLiveUserPositionData() {
       PVector position = new PVector();
       kinect.getCoM(userId, position); // CoM <= Center Of Mass
       kinect.convertRealWorldToProjective(position, position);
-      
-      if(!Float.isNaN(position.x)) {
+      if(isPositionValid(position)) {
         // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
         displayCenterOfMass(position);
         // TODO: add a parameter to toggle between cumulated position and individual user position
