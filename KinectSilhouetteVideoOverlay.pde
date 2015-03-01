@@ -202,6 +202,7 @@ void processLiveUserPositionData() {
         // TODO: add a parameter to toggle between cumulated position and individual user position
         // oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position, actionMgr.getCurrentIndex(), LIVE);
         cumulatedPosition.add(position);
+        hasData = true;
         SilhouetteFrame frame = silhouetteCache.getLast();
         if(frame!=null) {
           frame.addMetaData(nbUsers, i, position);
