@@ -188,11 +188,8 @@ void displayCenterOfMass(PVector position) {
 boolean isPositionValid(PVector position) {
    if(Float.isNaN(position.x) || Float.isNaN(position.y) || Float.isNaN(position.z))
      return false;
-   
-   if(position.x==0 && position.y==0 && position.z==0)
-     return false;
-     
-   return true; 
+   else
+     return true; 
 }
 
 void processLiveUserPositionData() {  
@@ -224,6 +221,7 @@ void processLiveUserPositionData() {
     
     // send only the cumulated position
     // TODO: see above TODO!
+    // cumulated should be true by default ...
     if(hasData) {
       oscManager.send(clipMgr.getCurrentIndex(), nbUsers, 0, cumulatedPosition, actionMgr.getCurrentIndex(), LIVE);
     }

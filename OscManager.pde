@@ -6,6 +6,7 @@ class OscConfigData {
   int serverPort = 13000;
   String clientAddress = "127.0.0.1";
   int clientPort = 12000;
+  boolean sendCached = false; // if true, allow sending cached clip data using OSC
 }
 
 class OscManager {
@@ -19,6 +20,8 @@ class OscManager {
     //start oscP5, listening for incoming messages at port 7000
     oscP5 = new OscP5(this, data.serverPort, OscP5.UDP);
     myRemoteLocation = new NetAddress(data.clientAddress, data.clientPort);
+    
+    sendCached = data.sendCached;
   }
   
   /**  
@@ -33,6 +36,9 @@ class OscManager {
    */
   void send(int clipIndex, int totalUsers, int userIndex, PVector position, int actionClipIndex, int displayMode) {
     if(!enabled)
+      return;
+      
+    if(!sendCached && displayMode==1)
       return;
     
     OscMessage msg = new OscMessage("/" + name);
@@ -50,5 +56,6 @@ class OscManager {
   private OscP5 oscP5;
   private boolean enabled = false;
   private String name; // installation identifier
+  private boolean sendCached = false;
 }
 

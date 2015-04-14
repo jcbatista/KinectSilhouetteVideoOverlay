@@ -61,6 +61,7 @@ class ConfigManager {
   boolean useGpu() {
     return configJSON.hasKey("useGpu") ? configJSON.getBoolean("useGpu"): false;
   }
+  
   // return an identifier for the installation (since there could be multiple Kinects/Projectors) 
   String getName() {
     return configJSON.getString("name");
@@ -135,6 +136,7 @@ class ConfigManager {
     data.serverPort = dataJSON.getInt("serverPort");
     data.clientAddress = dataJSON.getString("clientAddress");
     data.clientPort = dataJSON.getInt("clientPort");
+    data.sendCached = dataJSON.hasKey("sendCached") ? dataJSON.getBoolean("sendCached"): false;
     return data;
   }
   
