@@ -31,9 +31,8 @@ final int KINECT_HEIGHT = 480;
 final int WIDTH  = 640;  // WIDTH = 1280;
 final int HEIGHT = 480;  // HEIGHT = 720;
 final int colorMask = 0xffffff; // skip alpha channel
-final int LIVE = 0;
-final int CACHED = 1;
-
+final int LIVE = 1;
+final int CACHED = 0;
 void setup() {  
   application = this;
   println("Java version = " + System.getProperty("java.version"));
@@ -198,6 +197,7 @@ boolean isPositionValid(PVector position) {
 void processLiveUserPositionData() {  
     kinect.getUsers(userList);
     int nbUsers = int(userList.size());
+    oscManager.send(clipMgr.getCurrentIndex(), nbUsers, actionMgr.getCurrentIndex(), LIVE);
     for(int i=0; i<nbUsers; i++) {
       int userId = userList.get(i);
       PVector position = new PVector();
@@ -206,14 +206,11 @@ void processLiveUserPositionData() {
       if(isPositionValid(position)) {
         // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
         displayCenterOfMass(position);
-        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position, actionMgr.getCurrentIndex(), LIVE);
+        oscManager.sendUserIndex(i, position);
         SilhouetteFrame frame = silhouetteCache.getLast();
         if(frame!=null) {
           frame.addMetaData(nbUsers, i, position);
         }
-      } else {
-        // keep sending OSC data, but invalidate the position, position should be ignored in the receiver's end        
-        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, new PVector(), actionMgr.getCurrentIndex(), LIVE);
       }
     }
 }
@@ -229,8 +226,9 @@ void processCenterOfMass()
     // were using cached frames, send the cached meta data using OSC
     SilhouetteFrame frame = silhouetteCache.getCurrent();
     if(frame!=null && frame.getMetaDataList().size()>0) {    
+      oscManager.send(clipMgr.getCurrentIndex(), 0, actionMgr.getCurrentIndex(), CACHED);
       for(MetaData metaData: frame.getMetaDataList()) {
-        oscManager.send(clipMgr.getCurrentIndex(), metaData.totalUsers,  metaData.userIndex, metaData.position, actionMgr.getCurrentIndex(), CACHED);
+        oscManager.sendUserIndex(metaData.userIndex, metaData.position);
         displayCenterOfMass(metaData.position);
       }
     } else {
@@ -238,7 +236,7 @@ void processCenterOfMass()
         println("warning: invalid cached SilhouetteFrame received ...");
       }
       // cached frame has not metadata
-      oscManager.send(clipMgr.getCurrentIndex(), 0, 0, new PVector(), actionMgr.getCurrentIndex(), CACHED);
+      oscManager.send(clipMgr.getCurrentIndex(), 0, actionMgr.getCurrentIndex(), CACHED);
     }
   } else {
     processLiveUserPositionData();
