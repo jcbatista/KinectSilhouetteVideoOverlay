@@ -198,8 +198,6 @@ boolean isPositionValid(PVector position) {
 void processLiveUserPositionData() {  
     kinect.getUsers(userList);
     int nbUsers = int(userList.size());
-    boolean hasData = false;
-    PVector cumulatedPosition = new PVector();
     for(int i=0; i<nbUsers; i++) {
       int userId = userList.get(i);
       PVector position = new PVector();
@@ -208,10 +206,7 @@ void processLiveUserPositionData() {
       if(isPositionValid(position)) {
         // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
         displayCenterOfMass(position);
-        // TODO: add a parameter to toggle between cumulated position and individual user position
-        // oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position, actionMgr.getCurrentIndex(), LIVE);
-        cumulatedPosition.add(position);
-        hasData = true;
+        oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, position, actionMgr.getCurrentIndex(), LIVE);
         SilhouetteFrame frame = silhouetteCache.getLast();
         if(frame!=null) {
           frame.addMetaData(nbUsers, i, position);
@@ -221,13 +216,6 @@ void processLiveUserPositionData() {
         oscManager.send(clipMgr.getCurrentIndex(), nbUsers, i, new PVector(), actionMgr.getCurrentIndex(), LIVE);
       }
     }
-    
-    // send only the cumulated position
-    // TODO: see above TODO!
-    if(hasData) {
-      oscManager.send(clipMgr.getCurrentIndex(), nbUsers, 0, cumulatedPosition, actionMgr.getCurrentIndex(), LIVE);
-    }
-
 }
 
 
