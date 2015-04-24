@@ -42,7 +42,7 @@ class OscManager {
     oscP5.send(clipIndexMsg, myRemoteLocation); 
     
     // total users
-    OscMessage totalUserMsg = new OscMessage(messagePrefix + "total_user");
+    OscMessage totalUserMsg = new OscMessage(messagePrefix + "total_users");
     totalUserMsg.add(totalUsers);
     oscP5.send(totalUserMsg, myRemoteLocation); 
     
