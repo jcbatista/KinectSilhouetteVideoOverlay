@@ -319,15 +319,18 @@ void onNewUser(SimpleOpenNI curContext, int userId) {
  userID = userId;
   tracking = true;
   println("tracking");
+  oscManager.sendNewUserIndex(userId);
   //curContext.startTrackingSkeleton(userId);
 }
 
 void onLostUser(SimpleOpenNI curContext, int userId) {
   println("onLostUser - userId: " + userId);
+  oscManager.sendLostUserIndex(userId);
 }
 
 void onVisibleUser(SimpleOpenNI curContext, int userId) {
   //println("onVisibleUser - userId: " + userId);
+  oscManager.sendNewUserIndex(userId);
 }
 
 /* incoming osc message are forwarded to the oscEvent method. */

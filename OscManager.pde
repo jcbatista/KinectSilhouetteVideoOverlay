@@ -73,6 +73,26 @@ class OscManager {
     oscP5.send(userIndexMsg, myRemoteLocation); 
   }
   
+  void sendNewUserIndex(int userIndex)
+  {
+    if(!enabled)
+      return; 
+      
+    OscMessage newUserIndexMsg = new OscMessage(messagePrefix + "newuser_index");
+    newUserIndexMsg.add(userIndex);  
+    oscP5.send(newUserIndexMsg, myRemoteLocation); 
+  }
+  
+  void sendLostUserIndex(int userIndex)
+  {
+    if(!enabled)
+      return; 
+      
+    OscMessage lostUserIndexMsg = new OscMessage(messagePrefix + "lostuser_index");
+    lostUserIndexMsg.add(userIndex); 
+    oscP5.send(lostUserIndexMsg, myRemoteLocation);
+  }
+  
   
   private OscP5 oscP5;
   private boolean enabled = false;
