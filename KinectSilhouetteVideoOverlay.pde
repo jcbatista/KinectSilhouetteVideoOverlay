@@ -91,6 +91,8 @@ void initKinect() {
   
   // list of people in the scene
   userList = new IntVector();
+  
+  userManager = new UserManager();
 }
 
 void initComponents() {  
@@ -300,7 +302,7 @@ void drawElapsedTime() {
   textFont(font, 36);                
   fill(color(255,0,0));
   String fps = String.format("%.01f", frameRate);
-  String output = "Elapsed: " + str(clock.getCurrentTimeInSec()) + "  fps: " + fps;
+  String output = "Elapsed: " + str(clock.getCurrentTimeInSec()) + " user: " + userManager.getFocusedUser() + "  fps: " + fps;
   text(output , 10, 35);  
 }
 
@@ -316,21 +318,32 @@ void captureEvent(Capture captureDevice) {
 }
 
 void onNewUser(SimpleOpenNI curContext, int userId) {
- userID = userId;
+  userID = userId;
   tracking = true;
-  println("tracking");
-  oscManager.sendNewUserIndex(userId);
+
   //curContext.startTrackingSkeleton(userId);
+  
+  oscManager.sendNewUserIndex(userId);    
+  userManager.add(userId);
+  int focusedUser = userManager.getFocusedUser();
+  if(focusedUser!=-1) {
+    oscManager.sendFocusedUserIndex(focusedUser);
+  }
+  println("tracking" + userId + " focusedUser=" + focusedUser);
 }
 
 void onLostUser(SimpleOpenNI curContext, int userId) {
-  println("onLostUser - userId: " + userId);
   oscManager.sendLostUserIndex(userId);
+  userManager.remove(userId);
+  int focusedUser = userManager.getFocusedUser();
+  if(focusedUser!=-1) {
+    oscManager.sendFocusedUserIndex(focusedUser);
+  }
+  println("(onLostUser - userId: " + userId + " focusedUser:" + focusedUser);
 }
 
 void onVisibleUser(SimpleOpenNI curContext, int userId) {
-  //println("onVisibleUser - userId: " + userId);
-  oscManager.sendNewUserIndex(userId);
+ // println("onVisibleUser - userId: " + userId);
 }
 
 /* incoming osc message are forwarded to the oscEvent method. */
@@ -393,4 +406,5 @@ private NetAddress myRemoteLocation;
 private IntVector userList;
 private PFont font;
 private SilhouetteFrame previousFrame = null;
+private UserManager userManager;
 

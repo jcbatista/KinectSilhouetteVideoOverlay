@@ -93,6 +93,16 @@ class OscManager {
     oscP5.send(lostUserIndexMsg, myRemoteLocation);
   }
   
+  void sendFocusedUserIndex(int userIndex)
+  {
+    if(!enabled)
+      return; 
+      
+    OscMessage focusedUserIndexMsg = new OscMessage(messagePrefix + "focuseduser_index");
+    focusedUserIndexMsg.add(userIndex); 
+    oscP5.send(focusedUserIndexMsg, myRemoteLocation);
+  }
+  
   
   private OscP5 oscP5;
   private boolean enabled = false;
