@@ -108,5 +108,6 @@ class OscManager {
   private boolean enabled = false;
   private String name; // installation identifier
   private String messagePrefix;
+  private NetAddress myRemoteLocation;
 }
 

@@ -1,4 +1,6 @@
 import javax.swing.JFrame;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.LinkedList;
 import java.util.Arrays;
 import processing.video.*;
@@ -88,11 +90,8 @@ void initKinect() {
 
   // turn on depth/color alignment
   kinect.alternativeViewPointDepthToImage();
-  
-  // list of people in the scene
-  userList = new IntVector();
-  
-  userManager = new UserManager();
+    
+  userManager = new UserManager(kinect);
 }
 
 void initComponents() {  
@@ -186,37 +185,31 @@ void displayCenterOfMass(PVector position) {
   }
 }
 
-boolean isPositionValid(PVector position) {
-   if(Float.isNaN(position.x) || Float.isNaN(position.y) || Float.isNaN(position.z))
-     return false;
-   
-   if(position.x==0 && position.y==0 && position.z==0)
-     return false;
-     
-   return true; 
-}
-
 void processLiveUserPositionData() {  
-    kinect.getUsers(userList);
-    int nbUsers = int(userList.size());
-    oscManager.send(clipMgr.getCurrentIndex(), nbUsers, actionMgr.getCurrentIndex(), LIVE);
-    for(int i=0; i<nbUsers; i++) {
-      int userId = userList.get(i);
-      PVector position = new PVector();
-      kinect.getCoM(userId, position); // CoM <= Center Of Mass
-      kinect.convertRealWorldToProjective(position, position);
-      if(isPositionValid(position)) {
-        // println("user=" + userId + " of nbUsers=" + nbUsers + " position=" + position.x + "," + position.y + "," + position.z);
-        displayCenterOfMass(position);
-        oscManager.sendUserIndex(i, position);
-        SilhouetteFrame frame = silhouetteCache.getLast();
-        if(frame!=null) {
-          frame.addMetaData(nbUsers, i, position);
-        }
+    IntVector userList = userManager.getUsers();
+    Map<Integer, PVector> userPositions = userManager.getUserPositions();
+    int userCount = userPositions.size();
+    oscManager.send(clipMgr.getCurrentIndex(), userCount, actionMgr.getCurrentIndex(), LIVE);
+    for(Entry<Integer, PVector> userPosition :userPositions.entrySet()) {
+      int userId = userPosition.getKey();
+      PVector position = userPosition.getValue();        
+      displayCenterOfMass(position);
+      oscManager.sendUserIndex(userId, position);
+      SilhouetteFrame frame = silhouetteCache.getLast();
+      if(frame!=null) {
+        frame.addMetaData(userCount, userId, position);
       }
     }
 }
 
+void handleFocusedUser() {
+  int userId = userManager.getFocusedUser();
+  if(userId!=-1 && userId!=focusedUser) {
+    focusedUser = userId;
+    oscManager.sendFocusedUserIndex(focusedUser);
+    println("***** focused user=" + focusedUser);
+  }    
+}
 
 void processCenterOfMass()
 {  
@@ -242,6 +235,7 @@ void processCenterOfMass()
     }
   } else {
     processLiveUserPositionData();
+    handleFocusedUser();
   }
 }
 
@@ -251,7 +245,7 @@ void processCenterOfMass()
 SilhouetteFrame getSilhouetteFrame() { 
   SilhouetteFrame frame =  null;
   userMap = kinect.userMap();
-  kinect.getUsers(userList);
+  IntVector userList = userManager.getUsers();
   long userCount = userList.size();
   if(!hasUserMap && userCount > 0) {
     println("actually tracking users !!!!!!!!!!!!!!!!!!!!");
@@ -290,7 +284,6 @@ SilhouetteFrame getSilhouetteFrame() {
   return frame;
 }
 
-
 /*
  * apply the silhouette on the resultImage
  */
@@ -302,7 +295,17 @@ void drawElapsedTime() {
   textFont(font, 36);                
   fill(color(255,0,0));
   String fps = String.format("%.01f", frameRate);
-  String output = "Elapsed: " + str(clock.getCurrentTimeInSec()) + " user: " + userManager.getFocusedUser() + "  fps: " + fps;
+  String focusedUser = "";
+  if(useKinect)
+  {
+    int user = userManager.getFocusedUser();
+    if(user!=-1)
+      focusedUser = String.format(" user:%d", user);
+  } 
+  String output = "Elapsed: " + str(clock.getCurrentTimeInSec()) + focusedUser + " fps: " + fps;
+  
+  output += " " + userManager.dumpOrderUserList() + " " + userManager.dumpUserMapKeys();
+  
   text(output , 10, 35);  
 }
 
@@ -329,21 +332,17 @@ void onNewUser(SimpleOpenNI curContext, int userId) {
   if(focusedUser!=-1) {
     oscManager.sendFocusedUserIndex(focusedUser);
   }
-  println("tracking" + userId + " focusedUser=" + focusedUser);
+  println("**************** tracking:" + userId);
 }
 
 void onLostUser(SimpleOpenNI curContext, int userId) {
   oscManager.sendLostUserIndex(userId);
   userManager.remove(userId);
-  int focusedUser = userManager.getFocusedUser();
-  if(focusedUser!=-1) {
-    oscManager.sendFocusedUserIndex(focusedUser);
-  }
-  println("(onLostUser - userId: " + userId + " focusedUser:" + focusedUser);
+  println("**************** onLostUser - userId: " + userId);
 }
 
 void onVisibleUser(SimpleOpenNI curContext, int userId) {
- // println("onVisibleUser - userId: " + userId);
+  //println("onVisibleUser - userId: " + userId);
 }
 
 /* incoming osc message are forwarded to the oscEvent method. */
@@ -390,7 +389,7 @@ private ConfigManager configMgr;
 private ActionClipManager actionMgr;
 private OscManager oscManager;
 private SilhouetteFrameCache silhouetteCache;
-
+private UserManager userManager;
 private boolean shouldResizeSilhouette = false;
 private boolean shouldOverlayVideo = false;
 private boolean shouldMirrorSilouette = false;
@@ -402,9 +401,8 @@ private int[] userMap;
 
 private int smooth = 0;
 private PImage resultImage;
-private NetAddress myRemoteLocation;
-private IntVector userList;
+
 private PFont font;
 private SilhouetteFrame previousFrame = null;
-private UserManager userManager;
+private int focusedUser = -1;
 
