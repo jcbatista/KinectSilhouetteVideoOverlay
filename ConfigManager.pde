@@ -135,6 +135,7 @@ class ConfigManager {
     data.serverPort = dataJSON.getInt("serverPort");
     data.clientAddress = dataJSON.getString("clientAddress");
     data.clientPort = dataJSON.getInt("clientPort");
+    data.availableChannels = dataJSON.getInt("channels");
     return data;
   }
   

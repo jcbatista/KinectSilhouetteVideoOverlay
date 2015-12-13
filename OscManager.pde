@@ -6,6 +6,7 @@ class OscConfigData {
   int serverPort = 13000;
   String clientAddress = "127.0.0.1";
   int clientPort = 12000;
+  int availableChannels = 4;
 }
 
 class OscManager {
@@ -21,6 +22,7 @@ class OscManager {
     myRemoteLocation = new NetAddress(data.clientAddress, data.clientPort);
     
     messagePrefix = "/" + name + "/";
+    availableChannels = data.availableChannels;
   }
   
   /**  
@@ -66,7 +68,7 @@ class OscManager {
       return; 
       
     // user index
-    OscMessage userIndexMsg = new OscMessage(messagePrefix + "user_index/" + userIndex);
+    OscMessage userIndexMsg = new OscMessage(messagePrefix + "user_index/" + adjustIndexForAvailableChannels(userIndex));
     userIndexMsg.add(position.x);
     userIndexMsg.add(position.y);
     userIndexMsg.add(position.z);
@@ -79,7 +81,7 @@ class OscManager {
       return; 
       
     OscMessage newUserIndexMsg = new OscMessage(messagePrefix + "newuser_index");
-    newUserIndexMsg.add(userIndex);  
+    newUserIndexMsg.add(adjustIndexForAvailableChannels(userIndex));  
     oscP5.send(newUserIndexMsg, myRemoteLocation); 
   }
   
@@ -89,25 +91,48 @@ class OscManager {
       return; 
       
     OscMessage lostUserIndexMsg = new OscMessage(messagePrefix + "lostuser_index");
-    lostUserIndexMsg.add(userIndex); 
+    lostUserIndexMsg.add(adjustIndexForAvailableChannels(userIndex)); 
     oscP5.send(lostUserIndexMsg, myRemoteLocation);
   }
   
   void sendFocusedUserIndex(int userIndex)
   {
     if(!enabled)
-      return; 
-      
+      return;    
+    
+    // prevent identical sequencial "focuseduser_index" message from being sent for the same user.
+    if(userIndex == previousFocusedUserIndex)
+    {
+      println("***** sendFocusedUserIndex() called with the same user index as before. Index=" + userIndex);
+      return;
+    } else {
+      println("++++ sendFocusedUserIndex(). Sending adjusted user index=" + adjustIndexForAvailableChannels(userIndex));
+    }
+    
+    previousFocusedUserIndex = userIndex;  
     OscMessage focusedUserIndexMsg = new OscMessage(messagePrefix + "focuseduser_index");
-    focusedUserIndexMsg.add(userIndex); 
+    focusedUserIndexMsg.add(adjustIndexForAvailableChannels(userIndex)); 
     oscP5.send(focusedUserIndexMsg, myRemoteLocation);
   }
   
+  /**  
+   * ajustIndexForAvailableChanels
+   *
+   * The OSC client has a limit number of sound channels, 
+   * the user index needs to be within that range.
+   *
+   * @param userIndex: index to ajust
+   */
+  private int adjustIndexForAvailableChannels(int userIndex) {
+    return ((userIndex-1) % availableChannels) + 1;
+  }
   
+  private int previousFocusedUserIndex = -1;
   private OscP5 oscP5;
   private boolean enabled = false;
   private String name; // installation identifier
   private String messagePrefix;
-  private NetAddress myRemoteLocation;
+  private int availableChannels;
+  private NetAddress myRemoteLocation;  
 }
 
